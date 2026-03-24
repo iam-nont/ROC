@@ -1,0 +1,37 @@
+# Claude Code
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+
+# Temp files
+temp_extract/
+dp_test_page.html
+NUL
+
+# Raw data files (too large / not needed for web)
+*.yml
+*.txt
+*.lua
+*.jar
+*.csv
+mob_db.*
+item_db.*
+items_extracted.json
+items_merged.json
+monsters.json
+maps_extracted.json
+monster_sizes_extracted.json
+effects_extracted.json
+achievements_extracted.json
+towns_extracted.json
+item_prices.json
+monster_page_raw.html
+roc_monster_post.json
+roc_monsters_parsed.json
+dp_spawns_scraped.json
+spawns/
+
+# Large BMP files
+web/*.bmp
