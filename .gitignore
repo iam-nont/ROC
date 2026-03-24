@@ -12,6 +12,7 @@ NUL
 
 # Raw data files (too large / not needed for web)
 *.yml
+!.github/**/*.yml
 *.txt
 *.lua
 *.jar
