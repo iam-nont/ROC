@@ -1,6 +1,6 @@
 """
-Scrape monster spawn data from Divine Pride website (no API key needed).
-Fetches HTML pages and parses div.mapinfo elements for spawn data.
+Scrape monster spawn data from Divine Pride website for thROC (ROC Classic TH).
+Sets server to thROC via session API before scraping.
 
 Usage: python scrape_divine_pride.py [--resume]
 """
@@ -11,11 +11,35 @@ import sys
 import time
 import urllib.request
 import urllib.error
+import http.cookiejar
+
+
+def create_opener():
+    """Create URL opener with cookie jar and set server to thROC."""
+    cj = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    opener.addheaders = [
+        ('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'),
+        ('Accept', 'text/html,application/xhtml+xml'),
+        ('Accept-Language', 'en-US,en;q=0.9'),
+    ]
+
+    # Set server to thROC (ROC Classic TH)
+    set_url = 'https://www.divine-pride.net/Api/Regions/SetServer/thROC'
+    req = urllib.request.Request(set_url, data=b'', method='POST')
+    try:
+        opener.open(req, timeout=15)
+        print("Server set to thROC (ROC Classic TH)")
+    except Exception as e:
+        print(f"Warning: Failed to set server: {e}")
+
+    return opener, cj
 
 
 def parse_spawn_from_html(html):
     """Extract spawn data from Divine Pride monster HTML page.
-    Parses div.mapinfo blocks within the default spawn section."""
+    Parses div.mapinfo blocks within the default spawn section.
+    Aggregates multiple entries for the same map by summing counts."""
 
     # Find the spawn tab
     spawn_tab = re.search(r'<div[^>]*id="spawn"[^>]*>(.*)', html, re.DOTALL)
@@ -25,7 +49,6 @@ def parse_spawn_from_html(html):
     spawn_html = spawn_tab.group(1)
 
     # Try to get the default section specifically
-    # The default section is inside alternatespawn_default div
     default_match = re.search(
         r'id="alternatespawn_default"[^>]*>(.*?)(?=<div[^>]*class="alternatespawn"|$)',
         spawn_html, re.DOTALL
@@ -33,7 +56,6 @@ def parse_spawn_from_html(html):
     if default_match:
         section = default_match.group(1)
     else:
-        # Fallback: use everything in spawn tab
         section = spawn_html
 
     # Parse all mapinfo blocks
@@ -45,33 +67,33 @@ def parse_spawn_from_html(html):
         section, re.DOTALL
     )
 
-    spawns = []
+    # Aggregate by map name (sum counts, keep shortest respawn)
+    map_data = {}
     for map_name, count, respawn in mapinfos:
         map_name = map_name.strip()
-        # Skip special instance maps
         if '@' in map_name:
             continue
-        spawns.append({
-            'map': map_name,
-            'count': int(count),
-            'respawn': respawn.strip(),
-        })
+        count = int(count)
+        respawn = respawn.strip()
+        if map_name in map_data:
+            map_data[map_name]['count'] += count
+        else:
+            map_data[map_name] = {
+                'map': map_name,
+                'count': count,
+                'respawn': respawn,
+            }
 
-    return spawns
+    return list(map_data.values())
 
 
-def fetch_page(url, retries=3):
+def fetch_page(opener, url, retries=3):
     """Fetch a URL with retries and rate limit handling."""
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url)
-            req.add_header('User-Agent',
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-            req.add_header('Accept', 'text/html,application/xhtml+xml')
-            req.add_header('Accept-Language', 'en-US,en;q=0.9')
-
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                return resp.read().decode('utf-8', errors='ignore')
+            resp = opener.open(req, timeout=20)
+            return resp.read().decode('utf-8', errors='ignore')
         except urllib.error.HTTPError as e:
             if e.code == 429:
                 wait = 15 * (attempt + 1)
@@ -92,13 +114,21 @@ def main():
     base = os.path.dirname(os.path.abspath(__file__))
     resume = '--resume' in sys.argv
 
+    # Create opener with thROC server session
+    opener, cj = create_opener()
+
     # Get monster IDs from monster_data.js
     with open(os.path.join(base, 'web', 'monster_data.js'), 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Build name->id mapping
+    # Build name->id mapping (use LOWEST/primary ID for each name)
     name_pattern = re.findall(r'"id":\s*(\d+).*?"name":\s*"([^"]+)"', content)
-    name_to_id = {name.lower(): int(mid) for mid, name in name_pattern}
+    name_to_id = {}
+    for mid, name in name_pattern:
+        key = name.lower()
+        mid_int = int(mid)
+        if key not in name_to_id or mid_int < name_to_id[key]:
+            name_to_id[key] = mid_int
     id_to_name = {int(mid): name for mid, name in name_pattern}
 
     # Get ROC official monster names for filtering
@@ -137,13 +167,26 @@ def main():
 
     # Scrape Divine Pride
     remaining = [mid for mid in target_ids if str(mid) not in scraped]
-    print(f"\nScraping {len(remaining)} monsters from Divine Pride...")
+    print(f"\nScraping {len(remaining)} monsters from Divine Pride (thROC)...")
     print(f"(Total target: {len(target_ids)}, already done: {len(scraped)})")
     print("=" * 60)
 
+    session_refresh = 0
     for i, mid in enumerate(remaining):
+        # Refresh session every 100 monsters to keep thROC active
+        session_refresh += 1
+        if session_refresh >= 100:
+            set_url = 'https://www.divine-pride.net/Api/Regions/SetServer/thROC'
+            try:
+                req = urllib.request.Request(set_url, data=b'', method='POST')
+                opener.open(req, timeout=15)
+                print("  -- Refreshed thROC session --")
+            except:
+                pass
+            session_refresh = 0
+
         url = f"https://www.divine-pride.net/database/monster/{mid}"
-        html = fetch_page(url)
+        html = fetch_page(opener, url)
 
         name = id_to_name.get(mid, f'ID_{mid}')
 
