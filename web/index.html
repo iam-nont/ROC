@@ -742,7 +742,7 @@ td.cat-col { }
         <div id="wmSuggest" class="search-suggest"></div>
       </div>
       <div class="wm-search-box">
-        <input type="text" id="wmMonSearch" placeholder="Search monster..." style="padding-left:12px">
+        <input type="text" id="wmMonSearch" placeholder="Search monster..." oninput="wmSearchFilter()">
         <div id="wmMonSuggest" class="search-suggest"></div>
       </div>
       <span class="wm-label">Click map for details</span>
@@ -1731,7 +1731,7 @@ function showMapPanel(mapName, anchorEl) {
 
     html += `<div class="tt-label">Monsters</div>`;
     spawns.forEach(m => {
-      const mobId = getMobId(m.n);
+      const mobId = m.id || getMobId(m.n);
       const nameClass = m.b ? 'tt-mob-name boss' : 'tt-mob-name';
       const respawn = m.r ? ` / ${m.r}` : '';
       const mob = mobId ? MONSTERS.find(x => x.id === mobId) : null;
@@ -1984,7 +1984,7 @@ setupSuggest('wmMonSearch', 'wmMonSuggest',
     const mapList = r.maps.slice(0,3).map(m => `${m.map}(${m.count})`).join(', ');
     const more = r.maps.length > 3 ? ` +${r.maps.length-3}` : '';
     return `<div class="suggest-item">
-      <img src="https://static.divine-pride.net/images/mobs/png/${r.id}.png" onerror="this.style.display='none'">
+      ${r.id ? `<img src="https://static.divine-pride.net/images/mobs/png/${r.id}.png" onerror="this.style.display='none'" style="border-radius:3px">` : ''}
       <span class="s-name">${r.name}</span>
       <span class="s-sub">${r.maps.length} maps</span>
     </div>`;
