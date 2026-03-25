@@ -97,6 +97,7 @@ a:hover { text-decoration: underline; }
   margin-bottom: 16px;
   flex-wrap: wrap;
   align-items: center;
+  position: relative;
 }
 .search-bar input[type="text"] {
   flex: 1;
@@ -123,6 +124,28 @@ a:hover { text-decoration: underline; }
 }
 .search-bar select:focus { border-color: var(--accent); }
 .result-count { font-size: 13px; color: var(--text2); margin-left: 8px; }
+/* Search suggestions */
+.search-suggest {
+  position: absolute; top: 100%; left: 0; z-index: 100;
+  background: var(--bg2); border: 1px solid var(--accent);
+  border-radius: 0 0 8px 8px; max-height: 320px;
+  overflow-y: auto; display: none; width: 100%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+}
+.search-suggest.show { display: block; }
+.suggest-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px; cursor: pointer; border-bottom: 1px solid var(--border);
+}
+.suggest-item:last-child { border-bottom: none; }
+.suggest-item:hover { background: rgba(46,204,113,0.1); }
+.suggest-item img {
+  width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;
+  image-rendering: auto;
+}
+.suggest-item .s-name { color: var(--text); font-size: 13px; }
+.suggest-item .s-sub { color: var(--text2); font-size: 11px; margin-left: auto; white-space: nowrap; }
 
 /* Table */
 .table-wrap { overflow-x: auto; }
@@ -303,20 +326,18 @@ td.cat-col { }
   position: relative;
   width: 100%;
   padding-bottom: 80%; /* 1024/1280 = 0.8 aspect ratio */
-  background: url('roc_map.jpg') no-repeat center/100% 100%;
+  background: #0a0e10;
 }
 .wm-svg {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
   pointer-events: none;
-  z-index: 4;
+  z-index: 10;
 }
-.wm-svg line { stroke-width: 2; opacity: 0.7; }
-.wm-svg line.wm-link-field { stroke: #4a7; }
-.wm-svg line.wm-link-dungeon { stroke: #c44; }
-.wm-svg line.wm-link-city { stroke: #5ae; }
-.wm-cell.conn-highlight { outline: 2px solid var(--blue) !important; z-index: 5; }
+.wm-svg line { stroke: #e33; stroke-width: 3; opacity: 0.9; }
+.wm-cell.conn-highlight { outline: 2px solid #e33 !important; z-index: 5; }
+.wm-cell.wm-dimmed { opacity: 0.25; filter: grayscale(0.8); }
 .wm-controls {
   display: flex;
   gap: 8px;
@@ -338,16 +359,28 @@ td.cat-col { }
   background: var(--bg2);
   border: 2px solid var(--accent);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 0;
   min-width: 280px;
   max-width: 400px;
   max-height: 70vh;
-  overflow-y: auto;
+  overflow: hidden;
   pointer-events: auto;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  cursor: default;
   display: none;
   font-size: 13px;
 }
+.tt-drag-handle {
+  cursor: grab;
+  padding: 8px 14px 4px;
+  user-select: none;
+}
+.tt-drag-handle:active { cursor: grabbing; }
+.tt-body { padding: 4px 14px 12px; overflow-y: auto; max-height: calc(70vh - 40px); scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+.tt-body::-webkit-scrollbar { width: 6px; }
+.tt-body::-webkit-scrollbar-track { background: transparent; }
+.tt-body::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+.tt-body::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 .map-tooltip.show { display: block; }
 .map-tooltip .tt-close {
   position: absolute; top: 6px; right: 10px;
@@ -705,9 +738,14 @@ td.cat-col { }
   <div class="section" id="sec-worldmap">
     <div class="wm-controls">
       <div class="wm-search-box">
-        <input type="text" id="wmSearch" placeholder="Search monster or map name..." oninput="wmSearchFilter()">
+        <input type="text" id="wmSearch" placeholder="Search map name..." oninput="wmSearchFilter()">
+        <div id="wmSuggest" class="search-suggest"></div>
       </div>
-      <span class="wm-label">Double-click map for details</span>
+      <div class="wm-search-box">
+        <input type="text" id="wmMonSearch" placeholder="Search monster..." style="padding-left:12px">
+        <div id="wmMonSuggest" class="search-suggest"></div>
+      </div>
+      <span class="wm-label">Click map for details</span>
     </div>
     <div class="worldmap-wrapper">
       <div class="worldmap-container" id="wmContainer">
@@ -1514,7 +1552,8 @@ function buildWorldMapGrid() {
     div.appendChild(label);
 
     div.dataset.map = cell.n;
-    div.addEventListener('dblclick', (e) => {
+    div.addEventListener('click', (e) => {
+      e.stopPropagation();
       showWmCellPanel(e);
     });
     inner.appendChild(div);
@@ -1526,15 +1565,22 @@ function buildWorldMapGrid() {
     };
   });
 
-  // Close panel on click outside
+  // Close panel on click outside + reset selection on empty area
   document.addEventListener('click', (e) => {
-    const tooltip = document.getElementById('mapTooltip');
-    if (!tooltip.classList.contains('show')) return;
-    if (tooltip.contains(e.target)) return;
-    if (e.target.closest('.wm-cell')) return;
-    // If target was detached from DOM (e.g. innerHTML replaced by showMapPanel), don't close
     if (!document.contains(e.target)) return;
-    closeWmPanel();
+    if (e.target.closest('.wm-cell')) return;
+    const tooltip = document.getElementById('mapTooltip');
+    if (tooltip.contains(e.target)) return;
+    // If popup is showing, close it
+    if (tooltip.classList.contains('show')) {
+      closeWmPanel();
+      return;
+    }
+    // If popup already closed but dimming/lines active, clear everything
+    if (e.target.closest('.worldmap-inner')) {
+      clearConnectionLines();
+      clearDimming();
+    }
   });
 }
 
@@ -1542,16 +1588,13 @@ function drawConnectionsForMap(mapName) {
   const svg = document.getElementById('wmSvg');
   if (!svg || typeof MAP_CONNECTIONS === 'undefined') return;
 
-  // Clear previous lines
-  svg.innerHTML = '';
+  // Clear previous lines and highlights
+  clearConnectionLines();
 
   const conns = MAP_CONNECTIONS[mapName];
   if (!conns || !wmCellCenters[mapName]) return;
 
   const from = wmCellCenters[mapName];
-
-  // Highlight connected cells
-  document.querySelectorAll('.wm-cell.conn-highlight').forEach(c => c.classList.remove('conn-highlight'));
 
   conns.forEach(c => {
     if (!wmCellCenters[c.to]) return;
@@ -1562,10 +1605,6 @@ function drawConnectionsForMap(mapName) {
     line.setAttribute('y1', from.y);
     line.setAttribute('x2', to.x);
     line.setAttribute('y2', to.y);
-
-    const isCityConn = CITIES_SET && (CITIES_SET.has(mapName) || CITIES_SET.has(c.to));
-    const isDunConn = c.dir === 'portal';
-    line.classList.add(isDunConn ? 'wm-link-dungeon' : isCityConn ? 'wm-link-city' : 'wm-link-field');
 
     svg.appendChild(line);
 
@@ -1602,6 +1641,9 @@ function showMapPanel(mapName, anchorEl) {
   // Update connection lines for current map
   drawConnectionsForMap(mapName);
 
+  // Dim unrelated maps
+  dimUnrelatedMaps(mapName);
+
   // Highlight active cell - only change if clicking a grid cell
   if (anchorEl) {
     if (wmActiveCell) wmActiveCell.style.outline = '';
@@ -1609,7 +1651,8 @@ function showMapPanel(mapName, anchorEl) {
     anchorEl.style.outline = '2px solid var(--accent)';
   }
 
-  let html = `<button class="tt-close" onclick="closeWmPanel()">&times;</button>`;
+  let dragHtml = `<button class="tt-close" onclick="closeWmPanel()">&times;</button>`;
+  let html = '';
 
   // Check if this map is a dungeon floor - show back button
   let parentDungeon = null;
@@ -1707,36 +1750,98 @@ function showMapPanel(mapName, anchorEl) {
     html += `<div class="tt-no-data">No spawn data</div>`;
   }
 
-  tooltip.innerHTML = html;
+  tooltip.innerHTML = `<div class="tt-drag-handle">${dragHtml}</div><div class="tt-body">${html}</div>`;
   tooltip.classList.add('show');
 
-  // Position tooltip - only reposition if clicking a grid cell (anchorEl provided)
-  // When navigating dungeon floors (no anchorEl), keep tooltip where it is
+  // Position tooltip - avoid overlapping clicked cell, stay in viewport
   if (anchorEl) {
     const rect = anchorEl.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    let left = rect.right + 8;
-    let top = rect.top;
-    if (left + 400 > vw) left = rect.left - 408;
-    if (left < 4) left = 4;
-    if (top + 400 > vh) top = vh - 420;
-    if (top < 4) top = 4;
+    const tw = Math.min(400, vw - 16); // tooltip width
+    const th = Math.min(tooltip.scrollHeight || 400, vh * 0.7);
+    const gap = 8;
+    let left, top;
+
+    // Try right of cell
+    if (rect.right + gap + tw < vw) {
+      left = rect.right + gap;
+    // Try left of cell
+    } else if (rect.left - gap - tw > 0) {
+      left = rect.left - gap - tw;
+    // Fallback: center horizontally
+    } else {
+      left = Math.max(8, (vw - tw) / 2);
+    }
+
+    // Vertical: align top of tooltip with top of cell, clamp to viewport
+    top = rect.top;
+    if (top + th > vh - 8) top = vh - th - 8;
+    if (top < 8) top = 8;
+
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
   }
-  // Scroll tooltip to top when content changes
-  tooltip.scrollTop = 0;
+  // Scroll body to top when content changes
+  const ttBody = tooltip.querySelector('.tt-body');
+  if (ttBody) ttBody.scrollTop = 0;
 }
+
+// Popup drag support
+(function() {
+  let isDragging = false, startX, startY, startLeft, startTop;
+  document.addEventListener('mousedown', (e) => {
+    // Skip if clicking close button or any button/link inside handle
+    if (e.target.closest('.tt-close')) return;
+    if (!e.target.closest('.tt-drag-handle')) return;
+    const tooltip = document.getElementById('mapTooltip');
+    if (!tooltip.classList.contains('show')) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = parseInt(tooltip.style.left) || 0;
+    startTop = parseInt(tooltip.style.top) || 0;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const tooltip = document.getElementById('mapTooltip');
+    tooltip.style.left = (startLeft + e.clientX - startX) + 'px';
+    tooltip.style.top = (startTop + e.clientY - startY) + 'px';
+  });
+  document.addEventListener('mouseup', () => { isDragging = false; });
+})();
 
 function closeWmPanel() {
   const tooltip = document.getElementById('mapTooltip');
   tooltip.classList.remove('show');
   if (wmActiveCell) { wmActiveCell.style.outline = ''; wmActiveCell = null; }
-  // Clear connection lines and highlights
+  // Connection lines and highlights stay visible until clicking a new map
+}
+
+function clearConnectionLines() {
   const svg = document.getElementById('wmSvg');
-  if (svg) svg.innerHTML = '';
+  if (svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
   document.querySelectorAll('.wm-cell.conn-highlight').forEach(c => c.classList.remove('conn-highlight'));
+}
+
+function dimUnrelatedMaps(mapName) {
+  // Get connected map names
+  const related = new Set([mapName]);
+  if (typeof MAP_CONNECTIONS !== 'undefined' && MAP_CONNECTIONS[mapName]) {
+    MAP_CONNECTIONS[mapName].forEach(c => related.add(c.to));
+  }
+  document.querySelectorAll('.wm-cell').forEach(cell => {
+    if (related.has(cell.dataset.map)) {
+      cell.classList.remove('wm-dimmed');
+    } else {
+      cell.classList.add('wm-dimmed');
+    }
+  });
+}
+
+function clearDimming() {
+  document.querySelectorAll('.wm-cell.wm-dimmed').forEach(c => c.classList.remove('wm-dimmed'));
 }
 
 function goToMonster(id) {
@@ -1803,6 +1908,112 @@ switchTab = function(tab) {
     buildWorldMapGrid();
   }
 };
+
+// ─── Search Suggestions ──────────────────────────────────────
+function setupSuggest(inputId, suggestId, getItems, renderItem, onSelect) {
+  const input = document.getElementById(inputId);
+  const box = document.getElementById(suggestId);
+  if (!input || !box) return;
+
+  function update() {
+    const q = input.value.toLowerCase().trim();
+    if (q.length < 2) { box.classList.remove('show'); box.innerHTML = ''; return; }
+    const matches = getItems(q).slice(0, 10);
+    if (!matches.length) { box.classList.remove('show'); box.innerHTML = ''; return; }
+    box.innerHTML = matches.map((m, i) => renderItem(m, i)).join('');
+    box.classList.add('show');
+    box.querySelectorAll('.suggest-item').forEach((el, i) => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        box.classList.remove('show'); box.innerHTML = '';
+        onSelect(matches[i]);
+      });
+    });
+  }
+
+  input.addEventListener('input', debounce(update, 150));
+  input.addEventListener('focus', () => { if (input.value.trim().length >= 2) update(); });
+  input.addEventListener('blur', () => setTimeout(() => { box.classList.remove('show'); }, 200));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') { box.classList.remove('show'); } });
+}
+
+// World Map — Map name search
+setupSuggest('wmSearch', 'wmSuggest',
+  (q) => {
+    const dn = typeof MAP_DISPLAY_NAMES !== 'undefined' ? MAP_DISPLAY_NAMES : {};
+    return MAP_GRID_DATA.filter(m => {
+      return m.n.toLowerCase().includes(q) || (dn[m.n]||'').toLowerCase().includes(q);
+    }).map(m => ({n:m.n, sub:dn[m.n]||''}));
+  },
+  (r) => `<div class="suggest-item">
+    <img src="minimaps/${r.n}.png" onerror="this.style.display='none'" style="border-radius:3px">
+    <span class="s-name">${r.n}</span>
+    <span class="s-sub">${r.sub}</span>
+  </div>`,
+  (r) => {
+    const cell = document.querySelector(`.wm-cell[data-map="${r.n}"]`);
+    if (cell) { cell.click(); cell.scrollIntoView({behavior:'smooth', block:'center'}); }
+  }
+);
+
+// World Map — Monster search (shows maps where monster spawns)
+setupSuggest('wmMonSearch', 'wmMonSuggest',
+  (q) => {
+    const sp = typeof MAP_SPAWNS !== 'undefined' ? MAP_SPAWNS : {};
+    const results = [];
+    // Collect unique monster names matching query
+    const seen = new Set();
+    for (const [mapName, spawns] of Object.entries(sp)) {
+      for (const s of spawns) {
+        const nl = s.n.toLowerCase();
+        if (nl.includes(q) && !seen.has(nl)) {
+          seen.add(nl);
+          // Find all maps where this monster spawns
+          const maps = [];
+          for (const [mn, ss] of Object.entries(sp)) {
+            const match = ss.find(x => x.n.toLowerCase() === nl);
+            if (match) maps.push({map:mn, count:match.c});
+          }
+          results.push({name:s.n, id:s.id||0, maps:maps});
+        }
+      }
+    }
+    return results;
+  },
+  (r) => {
+    const mapList = r.maps.slice(0,3).map(m => `${m.map}(${m.count})`).join(', ');
+    const more = r.maps.length > 3 ? ` +${r.maps.length-3}` : '';
+    return `<div class="suggest-item">
+      <img src="https://static.divine-pride.net/images/mobs/png/${r.id}.png" onerror="this.style.display='none'">
+      <span class="s-name">${r.name}</span>
+      <span class="s-sub">${r.maps.length} maps</span>
+    </div>`;
+  },
+  (r) => {
+    // Highlight all maps where this monster spawns
+    wmSearchFilter_monster(r.name);
+  }
+);
+
+function wmSearchFilter_monster(monName) {
+  const sp = typeof MAP_SPAWNS !== 'undefined' ? MAP_SPAWNS : {};
+  const nl = monName.toLowerCase();
+  const matchMaps = new Set();
+  for (const [mapName, spawns] of Object.entries(sp)) {
+    if (spawns.some(s => s.n.toLowerCase() === nl)) matchMaps.add(mapName);
+  }
+  document.querySelectorAll('.wm-cell').forEach(c => {
+    if (matchMaps.has(c.dataset.map)) {
+      c.classList.add('search-match');
+      c.classList.remove('search-dim');
+    } else {
+      c.classList.remove('search-match');
+      c.classList.add('search-dim');
+    }
+  });
+  // Update map search input to show what's filtered
+  document.getElementById('wmSearch').value = '';
+}
 
 // Start
 init();

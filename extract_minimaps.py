@@ -159,8 +159,16 @@ def extract_minimaps():
                 decoded_data = grf_decode(file_data, entry_type, compressed_size)
                 decompressed = zlib.decompress(decoded_data)
 
-                # Convert BMP to PNG
+                # Convert BMP to PNG, making magenta (#FF00FF) transparent
                 img = Image.open(io.BytesIO(decompressed))
+                img = img.convert('RGBA')
+                pixels = img.load()
+                w, h = img.size
+                for py in range(h):
+                    for px in range(w):
+                        r, g, b, a = pixels[px, py]
+                        if r >= 250 and g <= 5 and b >= 250:
+                            pixels[px, py] = (0, 0, 0, 0)
                 img.save(png_path, 'PNG', optimize=True)
                 converted += 1
 
