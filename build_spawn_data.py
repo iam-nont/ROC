@@ -10,6 +10,11 @@ import json
 import os
 import re
 
+# Map name typos/variants in ROC official data -> correct names
+MAP_NAME_FIXES = {
+    'prt_fild1': 'prt_fild01',
+}
+
 
 def load_roc_official(filepath):
     """Load ROC official parsed monster data."""
@@ -74,7 +79,10 @@ def build_combined_spawns(roc_monsters, rathena_spawns, dp_spawns=None):
         hp = int(mon.get('HP', 0) or 0)
         race = mon.get('Race', '')
         element = mon.get('Property', '')
-        maps = mon.get('maps', [])
+        raw_maps = mon.get('maps', [])
+        # Fix known map name typos and deduplicate
+        fixed_maps = [MAP_NAME_FIXES.get(m, m) for m in raw_maps]
+        maps = list(dict.fromkeys(fixed_maps))
 
         for map_name in maps:
             if map_name not in spawns_by_map:
@@ -120,6 +128,22 @@ def build_combined_spawns(roc_monsters, rathena_spawns, dp_spawns=None):
                 entry['b'] = 1
 
             spawns_by_map[map_name].append(entry)
+
+    # Merge same-name variants per map (e.g. Goblin colors, Picky normal/shell)
+    # Sum counts, keep highest level/HP
+    for map_name in spawns_by_map:
+        merged = {}
+        for entry in spawns_by_map[map_name]:
+            key = entry['n']
+            if key in merged:
+                merged[key]['c'] = merged[key].get('c', 1) + entry.get('c', 1)
+                merged[key]['lv'] = max(merged[key]['lv'], entry['lv'])
+                merged[key]['hp'] = max(merged[key]['hp'], entry['hp'])
+                if entry.get('b'):
+                    merged[key]['b'] = 1
+            else:
+                merged[key] = dict(entry)
+        spawns_by_map[map_name] = list(merged.values())
 
     # Sort spawns within each map by level descending
     for map_name in spawns_by_map:

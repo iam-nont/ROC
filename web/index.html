@@ -6,18 +6,18 @@
 <title>RO Classic Database TH</title>
 <style>
 :root {
-  --bg: #121a14;
-  --bg2: #1a2e1f;
-  --bg3: #1e3a25;
-  --accent: #4ecca3;
-  --accent2: #2d6a4f;
-  --text: #eef2ef;
-  --text2: #9ab3a0;
-  --gold: #b7e4c7;
-  --green: #52d6a0;
-  --blue: #74c7b8;
-  --border: #2a4a35;
-  --card-bg: #162b1c;
+  --bg: #171c1e;
+  --bg2: #1e2628;
+  --bg3: #243034;
+  --accent: #2ecc71;
+  --accent2: #1a8a4a;
+  --text: #f0f0f0;
+  --text2: #98a8a0;
+  --gold: #f1c40f;
+  --green: #2ecc71;
+  --blue: #5dade2;
+  --border: #2c3a38;
+  --card-bg: #1c2426;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -49,6 +49,14 @@ a:hover { text-decoration: underline; }
 .header .stats {
   font-size: 13px;
   color: var(--text2);
+}
+.header-logo {
+  height: 80px;
+  margin-bottom: -30px;
+  object-fit: contain;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* Tabs */
@@ -137,13 +145,13 @@ thead th {
   top: 0;
   z-index: 10;
 }
-thead th:hover { background: #1a4a2a; }
+thead th:hover { background: #1e3a38; }
 thead th .sort-arrow { margin-left: 4px; font-size: 10px; }
 tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
-tbody tr:hover { background: rgba(78,204,163,0.08); }
+tbody tr:hover { background: rgba(46,204,113,0.08); }
 tbody td { padding: 8px 12px; vertical-align: top; }
 td.id-col { color: var(--text2); font-family: monospace; }
 td.name-col { color: var(--blue); font-weight: 500; cursor: pointer; }
@@ -267,50 +275,6 @@ td.cat-col { }
 .pagination .page-info { font-size: 13px; color: var(--text2); }
 
 /* Home section */
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-.home-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.home-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(78,204,163,0.15);
-}
-.home-card h3 { color: var(--gold); font-size: 20px; margin-bottom: 8px; }
-.home-card p { color: var(--text2); font-size: 14px; line-height: 1.5; }
-.home-card .count {
-  margin-top: 12px;
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--accent);
-}
-
-/* Quick stats */
-.quick-stats {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-.quick-stat {
-  background: rgba(255,255,255,0.05);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text2);
-}
-.quick-stat span { color: var(--green); font-weight: 600; }
-
 /* Monster drops in detail */
 .drop-table { width:100%; border-collapse:collapse; margin-top:12px; }
 .drop-table th { background:var(--bg3); padding:6px 10px; text-align:left; font-size:12px; color:var(--gold); }
@@ -324,47 +288,43 @@ td.cat-col { }
 .badge-normal { background:#333; color:#aaa; }
 
 /* World Map */
+.worldmap-wrapper {
+  padding: 0 24px;
+}
 .worldmap-container {
   position: relative;
   width: 100%;
-  overflow: hidden;
   border-radius: 12px;
+  overflow: hidden;
   border: 2px solid var(--border);
-  background: #0d140e;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
+  background: #12181a;
 }
-.worldmap-container.grabbing { cursor: grabbing; }
 .worldmap-inner {
-  transform-origin: 0 0;
   position: relative;
-  display: inline-block;
+  width: 100%;
+  padding-bottom: 80%; /* 1024/1280 = 0.8 aspect ratio */
+  background: url('roc_map.jpg') no-repeat center/100% 100%;
 }
-.worldmap-inner img {
-  display: block;
-  max-width: none;
+.wm-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 4;
 }
+.wm-svg line { stroke-width: 2; opacity: 0.7; }
+.wm-svg line.wm-link-field { stroke: #4a7; }
+.wm-svg line.wm-link-dungeon { stroke: #c44; }
+.wm-svg line.wm-link-city { stroke: #5ae; }
+.wm-cell.conn-highlight { outline: 2px solid var(--blue) !important; z-index: 5; }
 .wm-controls {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
   align-items: center;
   flex-wrap: wrap;
+  padding: 0 24px;
 }
-.wm-controls button {
-  padding: 8px 16px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg2);
-  color: var(--text);
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.15s;
-}
-.wm-controls button:hover { background: var(--bg3); }
-.wm-controls button.active { background: var(--accent); border-color: var(--accent); }
-.wm-controls .zoom-info { font-size: 13px; color: var(--text2); margin-left: 8px; }
 .wm-label {
   font-size: 13px;
   color: var(--text2);
@@ -428,7 +388,7 @@ td.cat-col { }
   width: 28px; height: 28px;
   object-fit: contain;
   flex-shrink: 0;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 .map-tooltip .tt-mob-name {
   color: var(--text);
@@ -449,6 +409,39 @@ td.cat-col { }
 }
 .map-tooltip .tt-mob-lv { color: var(--green); }
 .map-tooltip .tt-no-data { color: var(--text2); font-style: italic; }
+.map-tooltip .tt-back {
+  font-size: 12px; color: var(--blue); cursor: pointer;
+  margin-bottom: 4px; padding: 2px 0;
+}
+.map-tooltip .tt-back:hover { text-decoration: underline; }
+.map-tooltip .tt-dungeon {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 6px; margin: 2px 0;
+  background: rgba(200,60,60,0.15); border-radius: 4px;
+  cursor: pointer; transition: background 0.1s;
+  font-size: 12px; color: var(--text);
+}
+.map-tooltip .tt-dungeon:hover { background: rgba(200,60,60,0.3); }
+.map-tooltip .tt-dungeon-icon { color: #c44; font-weight: 700; }
+.map-tooltip .tt-connections {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin: 4px 0;
+}
+.map-tooltip .tt-conn-chip {
+  padding: 2px 6px; border-radius: 4px;
+  font-size: 11px; cursor: pointer;
+  background: rgba(255,255,255,0.08); color: var(--text2);
+  transition: all 0.1s;
+}
+.map-tooltip .tt-conn-chip:hover { background: rgba(46,204,113,0.3); color: var(--text); }
+.map-tooltip .tt-conn-dir {
+  font-size: 10px; color: var(--accent); font-weight: 700; margin-right: 2px;
+}
+.map-tooltip .tt-minimap {
+  width: 100%; max-height: 80px;
+  object-fit: contain; border-radius: 4px;
+  margin-bottom: 6px; background: #111;
+}
 
 /* World Map search */
 .wm-search-box {
@@ -473,7 +466,7 @@ td.cat-col { }
   font-size: 14px; opacity: 0.5;
 }
 .wm-cell.search-match {
-  background: rgba(78,204,163,0.5) !important;
+  background: rgba(46,204,113,0.5) !important;
   border-color: var(--accent) !important;
   z-index: 8 !important;
   animation: wmPulse 1s ease-in-out infinite;
@@ -488,44 +481,59 @@ td.cat-col { }
 
 /* Map table row hover highlight */
 #mapBody tr { cursor: pointer; }
-#mapBody tr:hover { background: rgba(78,204,163,0.15); }
+#mapBody tr:hover { background: rgba(46,204,113,0.15); }
 
-/* World map region markers */
+/* World map cells with minimap images */
 .wm-cell {
   position: absolute;
   border: 1px solid rgba(255,255,255,0.15);
   cursor: pointer;
   transition: all 0.12s;
   z-index: 5;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.wm-cell img {
+  width: 100%; height: 100%;
+  object-fit: fill;
+  display: block;
+  pointer-events: none;
 }
 .wm-cell:hover {
-  background: rgba(78,204,163,0.4);
   border-color: var(--accent);
   z-index: 10;
-}
-.wm-cell.has-spawns {
-  background: rgba(78,202,163,0.12);
+  box-shadow: 0 0 6px rgba(46,204,113,0.6);
 }
 .wm-cell.city {
-  background: rgba(245,197,24,0.2);
-  border-color: rgba(245,197,24,0.5);
+  border-color: rgba(245,197,24,0.6);
 }
 .wm-cell.city:hover {
-  background: rgba(245,197,24,0.45);
+  border-color: var(--gold);
+  box-shadow: 0 0 6px rgba(245,197,24,0.6);
+}
+.wm-cell.has-dungeon::after {
+  content: '';
+  position: absolute; bottom: 2px; right: 2px;
+  width: 8px; height: 8px;
+  background: #c44;
+  border-radius: 50%;
+  border: 1px solid #000;
+  z-index: 6;
 }
 .wm-cell .wm-cell-label {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  font-size: 8px;
+  bottom: 0; left: 0; right: 0;
+  font-size: 7px;
   color: #fff;
-  white-space: nowrap;
-  text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
-  font-weight: 600;
+  text-align: center;
+  background: rgba(0,0,0,0.6);
+  padding: 1px 0;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .wm-cell:hover .wm-cell-label {
   opacity: 1;
@@ -546,6 +554,7 @@ td.cat-col { }
 <body>
 
 <div class="header">
+  <img src="guide_map_2025.png" alt="ROC" class="header-logo">
   <h1>RO Classic Database TH</h1>
   <div class="stats" id="headerStats"></div>
 </div>
@@ -695,20 +704,16 @@ td.cat-col { }
   <!-- WORLD MAP -->
   <div class="section" id="sec-worldmap">
     <div class="wm-controls">
-      <button id="wmBtnMap" class="active" onclick="setWorldMap('normal')">World Map</button>
-      <span class="zoom-info" id="wmZoomInfo">100%</span>
-      <button onclick="wmZoom(0.2)">Zoom +</button>
-      <button onclick="wmZoom(-0.2)">Zoom -</button>
-      <button onclick="wmReset()">Reset</button>
       <div class="wm-search-box">
         <input type="text" id="wmSearch" placeholder="Search monster or map name..." oninput="wmSearchFilter()">
       </div>
-      <span class="wm-label">Click map cell for details</span>
+      <span class="wm-label">Double-click map for details</span>
     </div>
-    <div class="worldmap-container" id="wmContainer">
-      <div class="worldmap-inner" id="wmInner">
-        <img id="wmImage" src="worldmap.jpg" alt="Ragnarok Online World Map" draggable="false">
-        <!-- worldmap_roc.jpg = official ROC Classic TH, worldmap.jpg = GRF original -->
+    <div class="worldmap-wrapper">
+      <div class="worldmap-container" id="wmContainer">
+        <div class="worldmap-inner" id="wmInner">
+          <svg class="wm-svg" id="wmSvg" viewBox="0 0 1280 1024" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
       </div>
     </div>
   </div>
@@ -728,6 +733,7 @@ td.cat-col { }
 <script src="monster_data.js"></script>
 <script src="spawn_data.js"></script>
 <script src="map_grid.js"></script>
+<script src="map_connections.js"></script>
 <script>
 // ===================== GLOBALS =====================
 const PER_PAGE = 50;
@@ -779,9 +785,6 @@ function init() {
   document.getElementById('headerStats').textContent =
     `${ITEMS.length.toLocaleString()} Items | ${cardData.length} Cards | ${typeof MONSTERS!=='undefined'?MONSTERS.length:0} Monsters | ${MAPS.length.toLocaleString()} Maps`;
 
-  // Home grid
-  buildHome();
-
   // Tab events
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -800,8 +803,6 @@ function init() {
   document.getElementById('mobEleFilter').addEventListener('change', () => { mobPage=0; filterMobs(); });
   document.getElementById('mobClassFilter').addEventListener('change', () => { mobPage=0; filterMobs(); });
 
-  document.getElementById('mapSearch').addEventListener('input', debounce(() => { mapPage=0; filterMaps(); }, 200));
-  document.getElementById('mapTypeFilter').addEventListener('change', () => { mapPage=0; filterMaps(); });
 
   // Sort events
   document.querySelectorAll('#sec-items thead th[data-sort]').forEach(th => {
@@ -813,10 +814,6 @@ function init() {
   document.querySelectorAll('#sec-monsters thead th[data-sort]').forEach(th => {
     th.addEventListener('click', () => sortMobs(th.dataset.sort, th.dataset.type));
   });
-  document.querySelectorAll('#sec-maps thead th[data-sort]').forEach(th => {
-    th.addEventListener('click', () => sortMaps(th.dataset.sort, th.dataset.type));
-  });
-
   // Close detail on overlay click
   document.getElementById('detailOverlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeDetail();
@@ -827,47 +824,6 @@ function init() {
   filterItems();
   filterCards();
   filterMobs();
-  filterMaps();
-}
-
-// ===================== HOME =====================
-function buildHome() {
-  const cats = {};
-  ITEMS.forEach(i => { cats[i.cat] = (cats[i.cat]||0) + 1; });
-
-  const grid = document.getElementById('homeGrid');
-  const sections = [
-    { tab: 'items', title: 'Item Database', desc: 'Search weapons, armor, consumables, materials and more. Filter by category, type, and stats.', count: ITEMS.length, icon: '' },
-    { tab: 'cards', title: 'Card Database', desc: 'Browse all monster cards with effects. Filter by equip slot (Weapon, Armor, Accessory, etc.)', count: cardData.length, icon: '' },
-    { tab: 'monsters', title: 'Monster Database', desc: 'Browse all monsters with stats, drops, and EXP. Search by drop item name.', count: typeof MONSTERS!=='undefined'?MONSTERS.length:0, icon: '' },
-    { tab: 'maps', title: 'Map Database', desc: 'Explore all maps - dungeons, fields, towns, and instances.', count: MAPS.length, icon: '' },
-    { tab: 'worldmap', title: 'World Map', desc: 'Interactive Orbis of Midgard world map with zoom & pan. Toggle monster level overlay.', count: 0, icon: '' },
-  ];
-
-  sections.forEach(s => {
-    const card = document.createElement('div');
-    card.className = 'home-card';
-    card.onclick = () => switchTab(s.tab);
-    card.innerHTML = `
-      <h3>${s.title}</h3>
-      <p>${s.desc}</p>
-      ${s.count ? `<div class="count">${s.count.toLocaleString()}</div>` : '<div class="count" style="font-size:16px;color:var(--green)">Interactive Map</div>'}
-    `;
-    grid.appendChild(card);
-  });
-
-  // Quick stats row
-  const statsRow = document.createElement('div');
-  statsRow.style.cssText = 'grid-column:1/-1;';
-  statsRow.innerHTML = `
-    <h3 style="color:var(--text2);margin-bottom:8px;">Item Breakdown</h3>
-    <div class="quick-stats">
-      ${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
-        `<div class="quick-stat">${k}: <span>${v}</span></div>`
-      ).join('')}
-    </div>
-  `;
-  grid.appendChild(statsRow);
 }
 
 // ===================== TABS =====================
@@ -925,7 +881,7 @@ function renderItems() {
   tbody.innerHTML = page.map(i => `
     <tr onclick="showItemDetail(${i.id})">
       <td class="id-col">${i.id}</td>
-      <td class="name-col">${esc(i.name)}${i.slots ? ` [${i.slots}]` : ''}</td>
+      <td class="name-col"><img src="https://static.divine-pride.net/images/items/collection/${i.id}.png" style="height:24px;vertical-align:middle;margin-right:6px" onerror="this.style.display='none'">${esc(i.name)}${i.slots ? ` [${i.slots}]` : ''}</td>
       <td class="cat-col"><span class="badge badge-${i.cat.toLowerCase()}">${i.cat}</span></td>
       <td>${esc(i.wtype)}</td>
       <td class="num-col">${i.atk || '-'}</td>
@@ -961,7 +917,31 @@ function showItemDetail(id) {
 
   const desc = (item.desc || '').replace(/\|/g, '\n');
 
+  // Find which monsters drop this item
+  let droppedByHtml = '';
+  if (typeof MONSTERS !== 'undefined') {
+    const droppers = MONSTERS.filter(m =>
+      (m.drops && m.drops.some(d => d.itemId === id)) ||
+      (m.mvpDrops && m.mvpDrops.some(d => d.itemId === id))
+    );
+    if (droppers.length) {
+      droppedByHtml = `<h3 style="color:var(--gold);margin-top:16px;font-size:15px;">Dropped by</h3>`;
+      droppers.forEach(m => {
+        const drop = (m.drops||[]).find(d => d.itemId === id) || (m.mvpDrops||[]).find(d => d.itemId === id);
+        const rate = drop ? (drop.rate / 100).toFixed(2) + '%' : '';
+        droppedByHtml += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06)" onclick="goToMonster(${m.id})">
+          <img src="https://static.divine-pride.net/images/mobs/png/${m.id}.png" onerror="this.style.display='none'" style="width:32px;height:32px;object-fit:contain;image-rendering:auto">
+          <span style="color:var(--blue);flex:1">${esc(m.name)}</span>
+          <span style="color:var(--text2);font-size:12px">Lv${m.level} ${rate}</span>
+        </div>`;
+      });
+    }
+  }
+
   document.getElementById('detailContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:12px">
+      <img src="https://static.divine-pride.net/images/items/collection/${id}.png" onerror="this.style.display='none'" style="max-height:120px;image-rendering:auto">
+    </div>
     <h2>${esc(item.name)}${item.slots ? ` [${item.slots}]` : ''}</h2>
     ${rows.map(([l,v]) => `
       <div class="detail-row">
@@ -970,6 +950,7 @@ function showItemDetail(id) {
       </div>
     `).join('')}
     ${desc ? `<div class="detail-desc">${esc(desc)}</div>` : ''}
+    ${droppedByHtml}
   `;
   document.getElementById('detailOverlay').classList.add('show');
 }
@@ -1025,7 +1006,7 @@ function renderCards() {
   tbody.innerHTML = page.map(c => `
     <tr onclick="showCardDetail(${c.id})">
       <td class="id-col">${c.id}</td>
-      <td class="name-col">${esc(c.name)}</td>
+      <td class="name-col"><img src="https://static.divine-pride.net/images/items/cards/${c.id}.png" style="height:24px;vertical-align:middle;margin-right:6px" onerror="this.style.display='none'">${esc(c.name)}</td>
       <td>${esc(c.slot) || '-'}</td>
       <td>${esc(c.desc)}</td>
     </tr>
@@ -1055,7 +1036,7 @@ function showCardDetail(id) {
         const rate = drop ? (drop.rate / 100).toFixed(2) + '%' : '';
         const spriteUrl = `https://static.divine-pride.net/images/mobs/png/${m.id}.png`;
         droppedByHtml += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06)" onclick="goToMonster(${m.id})">
-          <img src="${spriteUrl}" onerror="this.style.display='none'" style="width:32px;height:32px;object-fit:contain;image-rendering:pixelated">
+          <img src="${spriteUrl}" onerror="this.style.display='none'" style="width:32px;height:32px;object-fit:contain;image-rendering:auto">
           <span style="color:var(--blue);flex:1">${esc(m.name)}</span>
           <span style="color:var(--text2);font-size:12px">Lv${m.level} ${rate}</span>
         </div>`;
@@ -1064,6 +1045,9 @@ function showCardDetail(id) {
   }
 
   document.getElementById('detailContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:12px">
+      <img src="https://static.divine-pride.net/images/items/cards/${id}.png" onerror="this.style.display='none'" style="max-height:150px;image-rendering:auto">
+    </div>
     <h2>${esc(card.name)}</h2>
     <div class="detail-row"><div class="detail-label">ID</div><div class="detail-value">${card.id}</div></div>
     <div class="detail-row"><div class="detail-label">Equip Slot</div><div class="detail-value">${esc(card.slot) || '-'}</div></div>
@@ -1129,7 +1113,7 @@ function renderMobs() {
     return `
     <tr onclick="showMobDetail(${m.id})" style="cursor:pointer">
       <td class="id-col">${m.id}</td>
-      <td class="name-col">${esc(m.name)}</td>
+      <td class="name-col"><img src="https://static.divine-pride.net/images/mobs/png/${m.id}.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;margin-right:6px" onerror="${m.spriteUrl?`this.src='${m.spriteUrl}';this.onerror=function(){this.style.display='none'}`:`this.style.display='none'`}">${esc(m.name)}</td>
       <td class="num-col">${m.level}</td>
       <td class="num-col">${(m.hp||0).toLocaleString()}</td>
       <td class="num-col">${(m.baseExp||0).toLocaleString()}</td>
@@ -1150,26 +1134,32 @@ function showMobDetail(id) {
 
   const atk = Array.isArray(m.atk) ? m.atk.join(' ~ ') : (m.atk||0);
   const stats = [
-    ['Level', m.level], ['HP', (m.hp||0).toLocaleString()], ['SP', m.sp||0],
+    ['Level', m.level], ['HP', (m.hp||0).toLocaleString()],
     ['ATK', atk], ['DEF', m.def||0], ['MDEF', m.mdef||0],
+    ['Flee', m.flee||0], ['Hit', m.hit||0],
     ['Base EXP', (m.baseExp||0).toLocaleString()], ['Job EXP', (m.jobExp||0).toLocaleString()],
     ['Element', m.element], ['Race', m.race], ['Size', m.size],
-    ['STR', m.str||0], ['AGI', m.agi||0], ['VIT', m.vit||0],
-    ['INT', m.int||0], ['DEX', m.dex||0], ['LUK', m.luk||0],
-    ['ATK Range', m.attackRange||0], ['Walk Speed', m.walkSpeed||0],
-    ['Class', m.class],
   ];
+  // Show detailed stats only if available (from rAthena supplement)
+  if (m.str || m.agi || m.vit || m.int || m.dex || m.luk) {
+    stats.push(['STR', m.str||0], ['AGI', m.agi||0], ['VIT', m.vit||0],
+               ['INT', m.int||0], ['DEX', m.dex||0], ['LUK', m.luk||0]);
+  }
+  if (m.attackRange) stats.push(['ATK Range', m.attackRange]);
+  if (m.walkSpeed) stats.push(['Walk Speed', m.walkSpeed]);
+  stats.push(['Class', m.class]);
 
   let dropsHtml = '';
   if (m.drops && m.drops.length) {
     dropsHtml = `<h3 style="color:var(--gold);margin-top:16px;font-size:15px;">Drops</h3>
-    <table class="drop-table"><thead><tr><th>Item</th><th>ID</th><th>Rate</th></tr></thead><tbody>`;
+    <table class="drop-table"><thead><tr><th>Item</th><th>Rate</th></tr></thead><tbody>`;
     m.drops.forEach(d => {
       const pct = d.rate / 100;
       const barW = Math.min(200, Math.max(2, pct * 2));
-      dropsHtml += `<tr style="cursor:pointer" onclick="goToItem(${d.itemId})">
-        <td style="color:var(--blue)">${esc(d.itemName)}</td>
-        <td class="id-col">${d.itemId}</td>
+      const clickable = d.itemId ? `style="cursor:pointer" onclick="goToItem(${d.itemId})"` : '';
+      const nameStyle = d.itemId ? 'color:var(--blue)' : 'color:var(--text2)';
+      dropsHtml += `<tr ${clickable}>
+        <td style="${nameStyle}">${esc(d.itemName)}</td>
         <td><span class="rate-bar" style="width:${barW}px"></span>${pct.toFixed(2)}%</td>
       </tr>`;
     });
@@ -1179,10 +1169,12 @@ function showMobDetail(id) {
   let mvpHtml = '';
   if (m.mvpDrops && m.mvpDrops.length) {
     mvpHtml = `<h3 style="color:var(--gold);margin-top:16px;font-size:15px;">MVP Drops</h3>
-    <table class="drop-table"><thead><tr><th>Item</th><th>ID</th><th>Rate</th></tr></thead><tbody>`;
+    <table class="drop-table"><thead><tr><th>Item</th><th>Rate</th></tr></thead><tbody>`;
     m.mvpDrops.forEach(d => {
       const pct = d.rate / 100;
-      mvpHtml += `<tr style="cursor:pointer" onclick="goToItem(${d.itemId})"><td style="color:var(--blue)">${esc(d.itemName)}</td><td class="id-col">${d.itemId}</td><td>${pct.toFixed(2)}%</td></tr>`;
+      const clickable = d.itemId ? `style="cursor:pointer" onclick="goToItem(${d.itemId})"` : '';
+      const nameStyle = d.itemId ? 'color:var(--blue)' : 'color:var(--text2)';
+      mvpHtml += `<tr ${clickable}><td style="${nameStyle}">${esc(d.itemName)}</td><td>${pct.toFixed(2)}%</td></tr>`;
     });
     mvpHtml += '</tbody></table>';
   }
@@ -1208,10 +1200,12 @@ function showMobDetail(id) {
   }
 
   const spriteUrl = `https://static.divine-pride.net/images/mobs/png/${id}.png`;
+  const rocSprite = m.spriteUrl || '';
+  const fallback = rocSprite ? `this.src='${rocSprite}';this.onerror=function(){this.style.display='none'}` : `this.style.display='none'`;
   document.getElementById('detailContent').innerHTML = `
     <h2 style="text-align:center">${esc(m.name)} <span class="badge ${m.class==='Boss'?'badge-boss':'badge-normal'}">${m.class}</span></h2>
     <div style="text-align:center;margin:12px 0">
-      <img src="${spriteUrl}" onerror="this.style.display='none'" style="max-width:500px;width:100%;image-rendering:pixelated">
+      <img src="${spriteUrl}" onerror="${fallback}" style="max-height:150px;image-rendering:auto">
     </div>
     <div class="mob-stats-grid">
       ${stats.map(([l,v]) => `<div class="mob-stat"><span class="label">${l}</span><span class="val">${v}</span></div>`).join('')}
@@ -1222,6 +1216,7 @@ function showMobDetail(id) {
 }
 
 function goToItem(itemId) {
+  if (!itemId) return;
   closeDetail();
   switchTab('items');
   setTimeout(() => showItemDetail(itemId), 100);
@@ -1234,8 +1229,9 @@ function goToMap(mapName) {
     // Highlight and scroll to the map cell
     const cell = document.querySelector(`.wm-cell[data-map="${mapName}"]`);
     if (cell) {
-      cell.click();
       cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showMapPanel(mapName, cell);
+      drawConnectionsForMap(mapName);
     }
   }, 200);
 }
@@ -1412,7 +1408,7 @@ function renderPagination(elId, total, current, onChange) {
   // Bind events
   const btns = el.querySelectorAll('button');
   btns[0].onclick = () => { if(current>0) onChange(current-1); };
-  btns[btns.length-2].onclick = () => { if(current<pages-1) onChange(current+1); };
+  btns[btns.length-1].onclick = () => { if(current<pages-1) onChange(current+1); };
   const rangeBtns = [...btns].slice(1, -1);
   let ri = 0;
   range.forEach(p => {
@@ -1460,155 +1456,131 @@ function debounce(fn, ms) {
 }
 
 // ===================== WORLD MAP =====================
-let wmScale = 1;
-let wmPanX = 0, wmPanY = 0;
-let wmDragging = false;
-let wmStartX = 0, wmStartY = 0;
-let wmCurrentMap = 'normal';
 
 function initWorldMap() {
-  const container = document.getElementById('wmContainer');
-  const inner = document.getElementById('wmInner');
-  if (!container || !inner) return;
-
-  // Set container height
-  container.style.height = (window.innerHeight - 220) + 'px';
-
-  // Mouse drag (ignore if clicking a marker)
-  container.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.wm-cell')) return;
-    wmDragging = true;
-    wmStartX = e.clientX - wmPanX;
-    wmStartY = e.clientY - wmPanY;
-    container.classList.add('grabbing');
-    e.preventDefault();
-  });
-  window.addEventListener('mousemove', (e) => {
-    if (!wmDragging) return;
-    wmPanX = e.clientX - wmStartX;
-    wmPanY = e.clientY - wmStartY;
-    wmApplyTransform();
-  });
-  window.addEventListener('mouseup', () => {
-    wmDragging = false;
-    document.getElementById('wmContainer')?.classList.remove('grabbing');
-  });
-
-  // Touch drag
-  container.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      wmDragging = true;
-      wmStartX = e.touches[0].clientX - wmPanX;
-      wmStartY = e.touches[0].clientY - wmPanY;
-    }
-  });
-  container.addEventListener('touchmove', (e) => {
-    if (!wmDragging || e.touches.length !== 1) return;
-    wmPanX = e.touches[0].clientX - wmStartX;
-    wmPanY = e.touches[0].clientY - wmStartY;
-    wmApplyTransform();
-    e.preventDefault();
-  }, { passive: false });
-  container.addEventListener('touchend', () => { wmDragging = false; });
-
-  // Mouse wheel zoom
-  container.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.15 : 0.15;
-    const rect = container.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    // Zoom toward cursor
-    const oldScale = wmScale;
-    wmScale = Math.max(0.3, Math.min(5, wmScale + delta));
-    const ratio = wmScale / oldScale;
-    wmPanX = mx - ratio * (mx - wmPanX);
-    wmPanY = my - ratio * (my - wmPanY);
-    wmApplyTransform();
-  }, { passive: false });
-
-  // Resize
-  window.addEventListener('resize', () => {
-    container.style.height = (window.innerHeight - 220) + 'px';
-  });
+  // No zoom/pan needed - map scales to fit screen width
 }
 
-function wmApplyTransform() {
-  const inner = document.getElementById('wmInner');
-  inner.style.transform = `translate(${wmPanX}px, ${wmPanY}px) scale(${wmScale})`;
-  document.getElementById('wmZoomInfo').textContent = Math.round(wmScale * 100) + '%';
-}
-
-function wmZoom(delta) {
-  const container = document.getElementById('wmContainer');
-  const rect = container.getBoundingClientRect();
-  const cx = rect.width / 2;
-  const cy = rect.height / 2;
-  const oldScale = wmScale;
-  wmScale = Math.max(0.3, Math.min(5, wmScale + delta));
-  const ratio = wmScale / oldScale;
-  wmPanX = cx - ratio * (cx - wmPanX);
-  wmPanY = cy - ratio * (cy - wmPanY);
-  wmApplyTransform();
-}
-
-function wmReset() {
-  wmScale = 1;
-  wmPanX = 0;
-  wmPanY = 0;
-  wmApplyTransform();
-}
-
-function setWorldMap(type) {
-  wmCurrentMap = type;
-  const img = document.getElementById('wmImage');
-  img.src = 'worldmap.jpg';
-  document.getElementById('wmBtnMap').classList.add('active');
-  wmReset();
-}
-
-// Build grid cells on the world map using MAP_GRID_DATA (pixel bounding boxes)
+// Build grid cells with minimap images + SVG connection lines
 let wmActiveCell = null;
+// Cache cell positions for SVG lines (in 1280x1024 coordinate space)
+const wmCellCenters = {};
+
 function buildWorldMapGrid() {
   if (typeof MAP_GRID_DATA === 'undefined' || typeof MAP_SPAWNS === 'undefined') return;
   const inner = document.getElementById('wmInner');
-  const img = document.getElementById('wmImage');
 
-  function create() {
-    MAP_GRID_DATA.forEach(cell => {
-      const div = document.createElement('div');
-      const hasSpawns = MAP_SPAWNS[cell.n];
-      const isCity = cell.city;
-
-      div.className = 'wm-cell' + (hasSpawns ? ' has-spawns' : '') + (isCity ? ' city' : '');
-      div.style.left = cell.x1 + 'px';
-      div.style.top = cell.y1 + 'px';
-      div.style.width = (cell.x2 - cell.x1) + 'px';
-      div.style.height = (cell.y2 - cell.y1) + 'px';
-
-      if (isCity) {
-        div.innerHTML = `<span class="wm-cell-label">${cell.n}</span>`;
-      }
-
-      div.dataset.map = cell.n;
-      div.addEventListener('click', showWmCellPanel);
-
-      inner.appendChild(div);
-    });
-
-    // Close panel on click outside
-    document.addEventListener('click', (e) => {
-      const tooltip = document.getElementById('mapTooltip');
-      if (!tooltip.classList.contains('show')) return;
-      if (tooltip.contains(e.target)) return;
-      if (e.target.closest('.wm-cell')) return;
-      closeWmPanel();
-    });
+  // Build set of maps that have dungeon entrances
+  const dungeonEntrances = new Set();
+  if (typeof DUNGEON_GROUPS !== 'undefined') {
+    Object.values(DUNGEON_GROUPS).forEach(dg => dungeonEntrances.add(dg.entrance));
   }
 
-  if (img.complete) create();
-  else img.addEventListener('load', create);
+  // Create map cells using percentage positioning (relative to 1280x1024)
+  MAP_GRID_DATA.forEach(cell => {
+    const div = document.createElement('div');
+    const hasSpawns = MAP_SPAWNS[cell.n];
+    const isCity = cell.city;
+    const hasDungeon = dungeonEntrances.has(cell.n);
+
+    let cls = 'wm-cell';
+    if (hasSpawns) cls += ' has-spawns';
+    if (isCity) cls += ' city';
+    if (hasDungeon) cls += ' has-dungeon';
+    div.className = cls;
+
+    // Position as percentages of 1280x1024
+    div.style.left = (cell.x1 / 1280 * 100) + '%';
+    div.style.top = (cell.y1 / 1024 * 100) + '%';
+    div.style.width = ((cell.x2 - cell.x1) / 1280 * 100) + '%';
+    div.style.height = ((cell.y2 - cell.y1) / 1024 * 100) + '%';
+
+    // Minimap image
+    if (cell.img) {
+      const img = document.createElement('img');
+      img.src = `minimaps/${cell.n}.png`;
+      img.alt = cell.n;
+      img.loading = 'lazy';
+      img.onerror = function() { this.style.display = 'none'; };
+      div.appendChild(img);
+    }
+
+    // Label
+    const displayName = (typeof MAP_DISPLAY_NAMES !== 'undefined' && MAP_DISPLAY_NAMES[cell.n])
+      ? MAP_DISPLAY_NAMES[cell.n] : cell.n;
+    const label = document.createElement('span');
+    label.className = 'wm-cell-label';
+    label.textContent = isCity ? displayName : cell.n;
+    div.appendChild(label);
+
+    div.dataset.map = cell.n;
+    div.addEventListener('dblclick', (e) => {
+      showWmCellPanel(e);
+    });
+    inner.appendChild(div);
+
+    // Cache center position for SVG lines
+    wmCellCenters[cell.n] = {
+      x: (cell.x1 + cell.x2) / 2,
+      y: (cell.y1 + cell.y2) / 2,
+    };
+  });
+
+  // Close panel on click outside
+  document.addEventListener('click', (e) => {
+    const tooltip = document.getElementById('mapTooltip');
+    if (!tooltip.classList.contains('show')) return;
+    if (tooltip.contains(e.target)) return;
+    if (e.target.closest('.wm-cell')) return;
+    // If target was detached from DOM (e.g. innerHTML replaced by showMapPanel), don't close
+    if (!document.contains(e.target)) return;
+    closeWmPanel();
+  });
 }
+
+function drawConnectionsForMap(mapName) {
+  const svg = document.getElementById('wmSvg');
+  if (!svg || typeof MAP_CONNECTIONS === 'undefined') return;
+
+  // Clear previous lines
+  svg.innerHTML = '';
+
+  const conns = MAP_CONNECTIONS[mapName];
+  if (!conns || !wmCellCenters[mapName]) return;
+
+  const from = wmCellCenters[mapName];
+
+  // Highlight connected cells
+  document.querySelectorAll('.wm-cell.conn-highlight').forEach(c => c.classList.remove('conn-highlight'));
+
+  conns.forEach(c => {
+    if (!wmCellCenters[c.to]) return;
+    const to = wmCellCenters[c.to];
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', from.x);
+    line.setAttribute('y1', from.y);
+    line.setAttribute('x2', to.x);
+    line.setAttribute('y2', to.y);
+
+    const isCityConn = CITIES_SET && (CITIES_SET.has(mapName) || CITIES_SET.has(c.to));
+    const isDunConn = c.dir === 'portal';
+    line.classList.add(isDunConn ? 'wm-link-dungeon' : isCityConn ? 'wm-link-city' : 'wm-link-field');
+
+    svg.appendChild(line);
+
+    // Highlight target cell
+    const targetCell = document.querySelector(`.wm-cell[data-map="${c.to}"]`);
+    if (targetCell) targetCell.classList.add('conn-highlight');
+  });
+}
+
+// Set of city maps for connection line classification
+const CITIES_SET = new Set([
+  'yuno','einbroch','lighthalzen','hugel','aldebaran','geffen','prontera',
+  'izlude','morocc','alberta','payon','comodo','rachel','veins','einbech',
+  'umbala','amatsu','louyang','gonryun','ayothaya','nifflheim','xmas',
+]);
 
 function getMobId(name) {
   if (!MONSTERS) return null;
@@ -1617,25 +1589,96 @@ function getMobId(name) {
 }
 
 function showWmCellPanel(e) {
-  e.stopPropagation();
   const cell = e.currentTarget;
   const mapName = cell.dataset.map;
+  showMapPanel(mapName, cell);
+}
+
+function showMapPanel(mapName, anchorEl) {
   const tooltip = document.getElementById('mapTooltip');
   const spawns = MAP_SPAWNS[mapName];
-  const mapInfo = MAPS ? MAPS.find(m => m.name === mapName) : null;
-  const display = mapInfo ? (mapInfo.display || '') : '';
+  const displayName = (typeof MAP_DISPLAY_NAMES !== 'undefined' && MAP_DISPLAY_NAMES[mapName]) || '';
 
-  // Highlight active cell
-  if (wmActiveCell) wmActiveCell.style.outline = '';
-  wmActiveCell = cell;
-  cell.style.outline = '2px solid var(--accent)';
+  // Update connection lines for current map
+  drawConnectionsForMap(mapName);
+
+  // Highlight active cell - only change if clicking a grid cell
+  if (anchorEl) {
+    if (wmActiveCell) wmActiveCell.style.outline = '';
+    wmActiveCell = anchorEl;
+    anchorEl.style.outline = '2px solid var(--accent)';
+  }
 
   let html = `<button class="tt-close" onclick="closeWmPanel()">&times;</button>`;
-  html += `<div class="tt-header">${esc(mapName)}${display ? ' - ' + esc(display) : ''}</div>`;
 
-  if (!spawns || spawns.length === 0) {
-    html += `<div class="tt-no-data">No spawn data</div>`;
+  // Check if this map is a dungeon floor - show back button
+  let parentDungeon = null;
+  if (typeof DUNGEON_GROUPS !== 'undefined') {
+    for (const [name, dg] of Object.entries(DUNGEON_GROUPS)) {
+      const floorIdx = dg.floors.indexOf(mapName);
+      if (floorIdx >= 0) {
+        parentDungeon = { name, entrance: dg.entrance, floors: dg.floors, floorIdx };
+        break;
+      }
+    }
+  }
+
+  if (parentDungeon) {
+    const entranceName = (typeof MAP_DISPLAY_NAMES !== 'undefined' && MAP_DISPLAY_NAMES[parentDungeon.entrance]) || parentDungeon.entrance;
+    html += `<div class="tt-back" onclick="showMapPanel('${parentDungeon.entrance}')">&#x2190; ${esc(entranceName)}</div>`;
+    html += `<div class="tt-header">${esc(parentDungeon.name)} ${parentDungeon.floorIdx + 1}F</div>`;
+    html += `<div style="color:var(--text2);font-size:11px;margin-bottom:6px">${esc(mapName)}</div>`;
   } else {
+    html += `<div class="tt-header">${esc(mapName)}${displayName ? ' - ' + esc(displayName) : ''}</div>`;
+  }
+
+  // Minimap thumbnail
+  html += `<img class="tt-minimap" src="minimaps/${mapName}.png" onerror="this.style.display='none'" alt="">`;
+
+  // Floor navigation for dungeons
+  if (parentDungeon && parentDungeon.floors.length > 1) {
+    html += `<div class="tt-label">Floors</div><div class="tt-connections">`;
+    parentDungeon.floors.forEach((floor, i) => {
+      const isActive = floor === mapName ? ' style="background:var(--accent);color:#000"' : '';
+      html += `<span class="tt-conn-chip"${isActive} onclick="showMapPanel('${floor}')">${i+1}F</span>`;
+    });
+    html += `</div>`;
+  }
+
+  // Connected maps
+  if (typeof MAP_CONNECTIONS !== 'undefined' && MAP_CONNECTIONS[mapName]) {
+    const conns = MAP_CONNECTIONS[mapName];
+    html += `<div class="tt-label">Connected Maps</div>`;
+    html += `<div class="tt-connections">`;
+    conns.forEach(c => {
+      const cName = (typeof MAP_DISPLAY_NAMES !== 'undefined' && MAP_DISPLAY_NAMES[c.to]) || c.to;
+      html += `<span class="tt-conn-chip" onclick="showMapPanel('${c.to}')"><span class="tt-conn-dir">${c.dir}</span>${esc(cName)}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  // Dungeon entrances from this map
+  if (typeof DUNGEON_GROUPS !== 'undefined') {
+    const mapDungeons = Object.entries(DUNGEON_GROUPS).filter(([,dg]) => dg.entrance === mapName);
+    if (mapDungeons.length > 0) {
+      html += `<div class="tt-label">Dungeons</div>`;
+      mapDungeons.forEach(([name, dg]) => {
+        dg.floors.forEach((floor, i) => {
+          const floorSpawns = MAP_SPAWNS[floor];
+          const monCount = floorSpawns ? floorSpawns.length : 0;
+          const floorLabel = dg.floors.length > 1 ? `${name} ${i+1}F` : name;
+          html += `<div class="tt-dungeon" onclick="showMapPanel('${floor}')">
+            <span class="tt-dungeon-icon">&#x26A0;</span>
+            <span style="flex:1">${esc(floorLabel)}</span>
+            <span style="color:var(--text2);font-size:11px">${monCount} mon</span>
+          </div>`;
+        });
+      });
+    }
+  }
+
+  // Monster spawns
+  if (spawns && spawns.length > 0) {
     const levels = spawns.map(m => m.lv).filter(l => l > 0);
     if (levels.length > 0) {
       const minLv = Math.min(...levels);
@@ -1648,8 +1691,11 @@ function showWmCellPanel(e) {
       const mobId = getMobId(m.n);
       const nameClass = m.b ? 'tt-mob-name boss' : 'tt-mob-name';
       const respawn = m.r ? ` / ${m.r}` : '';
+      const mob = mobId ? MONSTERS.find(x => x.id === mobId) : null;
       const spriteUrl = mobId ? `https://static.divine-pride.net/images/mobs/png/${mobId}.png` : '';
-      const spriteImg = spriteUrl ? `<img class="tt-mob-sprite" src="${spriteUrl}" onerror="this.style.display='none'" loading="lazy">` : '<span style="width:28px;display:inline-block"></span>';
+      const rocSprite = mob && mob.spriteUrl ? mob.spriteUrl : '';
+      const spriteFallback = rocSprite ? `this.src='${rocSprite}';this.onerror=function(){this.style.display='none'}` : `this.style.display='none'`;
+      const spriteImg = spriteUrl ? `<img class="tt-mob-sprite" src="${spriteUrl}" onerror="${spriteFallback}" loading="lazy">` : (rocSprite ? `<img class="tt-mob-sprite" src="${rocSprite}" onerror="this.style.display='none'" loading="lazy">` : '<span style="width:28px;display:inline-block"></span>');
       const clickAttr = mobId ? `onclick="goToMonster(${mobId})"` : '';
       html += `<div class="tt-mob" ${clickAttr}>
         ${spriteImg}
@@ -1657,29 +1703,40 @@ function showWmCellPanel(e) {
         <span class="tt-mob-info"><span class="tt-mob-lv">Lv${m.lv}</span> x${m.c}${respawn}</span>
       </div>`;
     });
+  } else if (!spawns) {
+    html += `<div class="tt-no-data">No spawn data</div>`;
   }
 
   tooltip.innerHTML = html;
   tooltip.classList.add('show');
 
-  // Position near clicked cell
-  const rect = cell.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  let left = rect.right + 8;
-  let top = rect.top;
-  if (left + 400 > vw) left = rect.left - 408;
-  if (left < 4) left = 4;
-  if (top + 400 > vh) top = vh - 420;
-  if (top < 4) top = 4;
-  tooltip.style.left = left + 'px';
-  tooltip.style.top = top + 'px';
+  // Position tooltip - only reposition if clicking a grid cell (anchorEl provided)
+  // When navigating dungeon floors (no anchorEl), keep tooltip where it is
+  if (anchorEl) {
+    const rect = anchorEl.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = rect.right + 8;
+    let top = rect.top;
+    if (left + 400 > vw) left = rect.left - 408;
+    if (left < 4) left = 4;
+    if (top + 400 > vh) top = vh - 420;
+    if (top < 4) top = 4;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+  // Scroll tooltip to top when content changes
+  tooltip.scrollTop = 0;
 }
 
 function closeWmPanel() {
   const tooltip = document.getElementById('mapTooltip');
   tooltip.classList.remove('show');
   if (wmActiveCell) { wmActiveCell.style.outline = ''; wmActiveCell = null; }
+  // Clear connection lines and highlights
+  const svg = document.getElementById('wmSvg');
+  if (svg) svg.innerHTML = '';
+  document.querySelectorAll('.wm-cell.conn-highlight').forEach(c => c.classList.remove('conn-highlight'));
 }
 
 function goToMonster(id) {
@@ -1701,13 +1758,24 @@ function wmSearchFilter() {
     const mapName = c.dataset.map;
     let match = mapName.toLowerCase().includes(q);
     // Search map display name
-    if (!match && MAPS) {
-      const info = MAPS.find(m => m.name === mapName);
-      if (info && info.display && info.display.toLowerCase().includes(q)) match = true;
+    if (!match && typeof MAP_DISPLAY_NAMES !== 'undefined' && MAP_DISPLAY_NAMES[mapName]) {
+      if (MAP_DISPLAY_NAMES[mapName].toLowerCase().includes(q)) match = true;
     }
     // Search monster names on this map
     if (!match && MAP_SPAWNS[mapName]) {
       match = MAP_SPAWNS[mapName].some(s => s.n.toLowerCase().includes(q));
+    }
+    // Search dungeon floors connected to this map
+    if (!match && typeof DUNGEON_GROUPS !== 'undefined') {
+      for (const [name, dg] of Object.entries(DUNGEON_GROUPS)) {
+        if (dg.entrance !== mapName) continue;
+        if (name.toLowerCase().includes(q)) { match = true; break; }
+        for (const floor of dg.floors) {
+          if (floor.includes(q)) { match = true; break; }
+          if (MAP_SPAWNS[floor] && MAP_SPAWNS[floor].some(s => s.n.toLowerCase().includes(q))) { match = true; break; }
+        }
+        if (match) break;
+      }
     }
     if (match) {
       c.classList.add('search-match');
@@ -1731,10 +1799,8 @@ switchTab = function(tab) {
   origSwitchTab(tab);
   if (tab === 'worldmap' && !wmInited) {
     wmInited = true;
-    setTimeout(() => {
-      initWorldMap();
-      buildWorldMapGrid();
-    }, 50);
+    initWorldMap();
+    buildWorldMapGrid();
   }
 };
 

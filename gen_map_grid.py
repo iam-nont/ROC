@@ -2,7 +2,7 @@
 Generate world map grid positions from mappostable.txt (extracted from GRF).
 Each map has exact pixel bounding boxes (x1,y1,x2,y2) on the 1280x1024 worldmap.
 
-Source: data.grf -> mappostable.txt
+Source: data.grf -> mappostable.txt + manual additions for missing field maps
 Format: groupIndex#mapname.rsw#x1#y1#x2#y2#
 """
 import json
@@ -14,6 +14,46 @@ CITIES = {
     'yuno', 'einbroch', 'lighthalzen', 'hugel', 'aldebaran',
     'geffen', 'prontera', 'izlude', 'morocc', 'alberta',
     'payon', 'comodo', 'rachel', 'veins', 'einbech', 'umbala',
+    'amatsu', 'louyang', 'gonryun', 'ayothaya', 'nifflheim', 'xmas',
+}
+
+# Field maps missing from mappostable.txt but present on the world map
+# Positions estimated from grid patterns of surrounding maps
+EXTRA_FIELD_MAPS = {
+    # Morocc / Sograt Desert (gaps in desert grid)
+    'moc_fild04': (660, 785, 717, 844),
+    'moc_fild05': (718, 785, 776, 844),
+    'moc_fild06': (777, 785, 835, 844),
+    'moc_fild08': (660, 845, 717, 893),
+    'moc_fild09': (718, 845, 776, 893),
+    'moc_fild10': (777, 845, 835, 893),
+    'moc_fild14': (718, 894, 776, 938),
+    'moc_fild15': (777, 894, 835, 938),
+    # Hugel area
+    'hu_fild03': (812, 0, 870, 57),
+    'hu_fild07': (695, 58, 752, 116),
+    # Geffen area
+    'gef_fild12': (518, 644, 575, 701),
+    'gef_fild14': (460, 644, 517, 701),
+    # Payon area
+    'pay_fild05': (871, 761, 927, 803),
+    'pay_fild11': (936, 862, 994, 931),
+    # Comodo area
+    'cmd_fild05': (484, 835, 543, 893),
+    # Einbroch area
+    'ein_fild02': (636, 58, 694, 116),
+    'ein_fild10': (460, 352, 517, 410),
+    # Nifflheim area
+    'nif_fild01': (94, 761, 157, 834),
+    'nif_fild02': (158, 761, 223, 834),
+    # Xmas / Lutie
+    'xmas_fild01': (1165, 117, 1220, 173),
+    # Island maps (Amatsu, Ayothaya, Gonryun, Louyang) - positioned at map edges
+    'ama_fild01': (1114, 862, 1163, 913),
+    'ayo_fild01': (1164, 862, 1220, 913),
+    'ayo_fild02': (1164, 914, 1220, 964),
+    'gon_fild01': (1114, 914, 1163, 964),
+    'lou_fild01': (1221, 862, 1275, 913),
 }
 
 
@@ -57,6 +97,15 @@ def main():
 
     map_positions = parse_mappostable(mappos_file)
     print(f"Parsed {len(map_positions)} maps from mappostable.txt")
+
+    # Add missing field maps not in GRF mappostable.txt
+    added = 0
+    for map_name, coords in EXTRA_FIELD_MAPS.items():
+        if map_name not in map_positions:
+            map_positions[map_name] = coords
+            added += 1
+    if added:
+        print(f"Added {added} extra field maps (manual positions)")
 
     # Load spawn data to check which maps have spawns
     spawn_file = os.path.join(base, 'web', 'spawn_data.js')
