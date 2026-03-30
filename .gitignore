@@ -43,6 +43,9 @@ spawns/
 # Large BMP files
 web/*.bmp
 
+# Raw sprite data (extracted from GRF, not needed for web)
+web/sprites/raw/
+
 # Node / Cypress
 node_modules/
 cypress/screenshots/

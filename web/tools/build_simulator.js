@@ -918,12 +918,12 @@
         position: relative;\n\
       }\n\
       .bs-chara-sprite {\n\
-        max-height: 140px;\n\
-        max-width: 100px;\n\
+        height: 140px;\n\
+        width: auto;\n\
         object-fit: contain;\n\
         image-rendering: pixelated;\n\
         -ms-interpolation-mode: nearest-neighbor;\n\
-        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));\n\
+        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));\n\
         transition: opacity 0.3s ease;\n\
       }\n\
       .bs-chara-fallback {\n\
@@ -973,7 +973,7 @@
         .bs-equip-slot .bs-slot-label { width: 60px; font-size: 10px; }\n\
         .bs-equip-slot { padding: 6px 8px; }\n\
         .bs-target-stats { grid-template-columns: 1fr; }\n\
-        .bs-chara-sprite { max-height: 100px; max-width: 70px; }\n\
+        .bs-chara-sprite { height: 100px; }\n\
       }\n\
     ';
     document.head.appendChild(style);
@@ -1476,7 +1476,7 @@
   // ==================== CHARACTER PREVIEW ====================
 
   function getJobSpriteUrl(jobClassId) {
-    return 'https://static.divine-pride.net/images/jobs/classes/idle/' + jobClassId + '.gif';
+    return 'sprites/' + jobClassId + '.gif';
   }
 
   function getJobSpriteFallbackUrl(jobClassId) {
