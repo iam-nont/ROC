@@ -467,11 +467,31 @@
         gap: 8px;\n\
         padding: 4px 0;\n\
       }\n\
+      .bs-sel-icon {\n\
+        width: 24px;\n\
+        height: 24px;\n\
+        object-fit: contain;\n\
+        flex-shrink: 0;\n\
+        image-rendering: auto;\n\
+        border-radius: 3px;\n\
+        background: var(--bg2);\n\
+      }\n\
+      .bs-sel-info {\n\
+        flex: 1;\n\
+        min-width: 0;\n\
+        display: flex;\n\
+        flex-direction: column;\n\
+        gap: 1px;\n\
+      }\n\
       .bs-selected .bs-sel-name {\n\
         font-size: 13px;\n\
         font-weight: 600;\n\
         color: var(--accent);\n\
-        flex: 1;\n\
+      }\n\
+      .bs-sel-cards {\n\
+        font-size: 10px;\n\
+        color: var(--gold);\n\
+        font-style: italic;\n\
       }\n\
       .bs-selected .bs-sel-detail {\n\
         font-size: 10px;\n\
@@ -527,6 +547,14 @@
         display: flex; align-items: center; gap: 6px;\n\
         padding: 3px 8px; background: var(--bg2); border-radius: 4px;\n\
         border: 1px solid var(--border); font-size: 12px;\n\
+      }\n\
+      .bs-card-icon {\n\
+        width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;\n\
+        image-rendering: auto; border-radius: 2px;\n\
+      }\n\
+      .bs-dd-icon {\n\
+        width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;\n\
+        image-rendering: auto;\n\
       }\n\
       .bs-card-clear {\n\
         background: none; border: none; color: var(--accent); cursor: pointer;\n\
@@ -941,14 +969,20 @@
         white-space: nowrap;\n\
         overflow: hidden;\n\
         text-overflow: ellipsis;\n\
-        max-width: 110px;\n\
+        max-width: 130px;\n\
         text-align: center;\n\
         transition: all 0.2s;\n\
+        display: flex;\n\
+        align-items: center;\n\
+        gap: 3px;\n\
       }\n\
       .bs-doll-slot.equipped {\n\
         color: var(--text);\n\
         border-color: var(--accent);\n\
         background: rgba(46,204,113,0.1);\n\
+      }\n\
+      .bs-doll-icon {\n\
+        width: 18px; height: 18px; object-fit: contain; flex-shrink: 0;\n\
       }\n\
       .bs-doll-slot.left { justify-self: end; }\n\
       .bs-doll-slot.right { justify-self: start; }\n\
@@ -1233,6 +1267,81 @@
     leftEl.innerHTML = html;
   }
 
+  // ==================== EQUIP DISPLAY HELPERS ====================
+
+  var ITEM_ICON_URL = 'https://static.divine-pride.net/images/items/collection/';
+  var CARD_ICON_URL = 'https://static.divine-pride.net/images/items/cards/';
+
+  function getEquipFullName(slotKey) {
+    var eq = bsState.equip[slotKey];
+    if (!eq || !eq.item) return '';
+    var refStr = (eq.refine && eq.refine > 0) ? '+' + eq.refine + ' ' : '';
+    var name = eq.item.name || '';
+    var cardNames = [];
+    var emptySlots = 0;
+    if (eq.cards) {
+      for (var i = 0; i < eq.cards.length; i++) {
+        if (eq.cards[i]) {
+          var card = (typeof ITEMS !== 'undefined') ? ITEMS.find(function (x) { return x.id === eq.cards[i]; }) : null;
+          cardNames.push(card ? card.name : 'Card');
+        } else {
+          emptySlots++;
+        }
+      }
+    }
+    var slotStr = '';
+    if (eq.item.slots > 0) {
+      slotStr = ' [' + (cardNames.length > 0 ? cardNames.join(', ') : '') + (emptySlots > 0 ? (cardNames.length > 0 ? ', ' : '') + emptySlots : '') + ']';
+    }
+    return refStr + name + slotStr;
+  }
+
+  function updateEquipDisplay(slotKey) {
+    var eq = bsState.equip[slotKey];
+    if (!eq || !eq.item) return;
+    var selEl = document.getElementById('bs-sel-' + slotKey);
+    if (!selEl) return;
+
+    var item = eq.item;
+    var detail = '';
+    if (item.cat === 'Weapon') {
+      detail = 'ATK ' + (item.atk || 0) + ' | ' + esc(item.wtype) + ' | Lv' + (item.wlv || 1) + ' | Slots ' + (item.slots || 0);
+    } else {
+      detail = 'DEF ' + (item.def || 0) + (item.slots ? ' | Slots ' + item.slots : '');
+    }
+
+    // Card summary
+    var cardNames = [];
+    if (eq.cards) {
+      for (var i = 0; i < eq.cards.length; i++) {
+        if (eq.cards[i]) {
+          var card = (typeof ITEMS !== 'undefined') ? ITEMS.find(function (x) { return x.id === eq.cards[i]; }) : null;
+          cardNames.push(card ? card.name : 'Card #' + eq.cards[i]);
+        }
+      }
+    }
+    var cardText = cardNames.length > 0 ? cardNames.join(', ') : '';
+    var refStr = (eq.refine && eq.refine > 0) ? '+' + eq.refine + ' ' : '';
+
+    selEl.innerHTML = '<div class="bs-selected">' +
+      '<img class="bs-sel-icon" src="' + ITEM_ICON_URL + item.id + '.png" onerror="this.style.display=\'none\'">' +
+      '<div class="bs-sel-info">' +
+        '<span class="bs-sel-name">' + esc(refStr + item.name) + '</span>' +
+        (cardText ? '<span class="bs-sel-cards">' + esc(cardText) + '</span>' : '') +
+        '<span class="bs-sel-detail">' + detail + '</span>' +
+      '</div>' +
+      '<button class="bs-sel-clear" data-slot="' + slotKey + '">X</button>' +
+      '</div>';
+
+    // Re-attach clear handler
+    var clearBtn = selEl.querySelector('.bs-sel-clear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () { clearEquipItem(slotKey); });
+    }
+
+    updateCharaPreview();
+  }
+
   // ==================== EQUIP SELECT/CLEAR ====================
 
   function selectEquipItem(slotKey, item) {
@@ -1261,17 +1370,7 @@
 
     var selEl = document.getElementById('bs-sel-' + slotKey);
     selEl.style.display = 'block';
-    var detail = '';
-    if (item.cat === 'Weapon') {
-      detail = 'ATK ' + (item.atk || 0) + ' | ' + esc(item.wtype) + ' | Lv' + (item.wlv || 1) + ' | Slots ' + (item.slots || 0);
-    } else {
-      detail = 'DEF ' + (item.def || 0) + (item.slots ? ' | Slots ' + item.slots : '');
-    }
-    selEl.innerHTML = '<div class="bs-selected">' +
-      '<span class="bs-sel-name">' + esc(item.name) + '</span>' +
-      '<span class="bs-sel-detail">' + detail + '</span>' +
-      '<button class="bs-sel-clear" data-slot="' + slotKey + '">X</button>' +
-      '</div>';
+    updateEquipDisplay(slotKey);
 
     // Show refine row
     var refRow = document.getElementById('bs-ref-' + slotKey);
@@ -1398,6 +1497,7 @@
     dd.innerHTML = cards.map(function (c) {
       var desc = (c.desc || '').substring(0, 60);
       return '<div class="bs-dd-item bs-cdd-item" data-card-id="' + c.id + '" data-slot="' + slotKey + '" data-card-idx="' + cardIdx + '">' +
+        '<img class="bs-dd-icon" src="' + CARD_ICON_URL + c.id + '.png" onerror="this.style.display=\'none\'">' +
         '<span class="dd-name">' + esc(c.name) + '</span>' +
         '<span class="dd-sub">' + esc(desc) + '</span>' +
         '</div>';
@@ -1431,7 +1531,8 @@
     var selEl = document.getElementById('bs-csel-' + slotKey + '-' + cardIdx);
     if (selEl) {
       selEl.style.display = 'flex';
-      selEl.innerHTML = '<span class="bs-sel-name" style="font-size:12px">' + esc(cardName) + '</span>' +
+      selEl.innerHTML = '<img class="bs-card-icon" src="' + CARD_ICON_URL + cardId + '.png" onerror="this.style.display=\'none\'">' +
+        '<span class="bs-sel-name" style="font-size:12px">' + esc(cardName) + '</span>' +
         '<button class="bs-card-clear" data-slot="' + slotKey + '" data-card-idx="' + cardIdx + '">X</button>';
 
       selEl.querySelector('.bs-card-clear').addEventListener('click', function () {
@@ -1439,6 +1540,7 @@
       });
     }
 
+    updateEquipDisplay(slotKey);
     emitEquipToROCBuild();
     recalcDPS();
   }
@@ -1452,6 +1554,7 @@
     var selEl = document.getElementById('bs-csel-' + slotKey + '-' + cardIdx);
     if (selEl) { selEl.style.display = 'none'; selEl.innerHTML = ''; }
 
+    updateEquipDisplay(slotKey);
     emitEquipToROCBuild();
     recalcDPS();
   }
@@ -1550,13 +1653,14 @@
       if (!el) continue;
       var eq = bsState.equip[slotKey];
       if (eq && eq.item) {
-        var name = eq.item.name || '';
-        var refStr = (eq.refine && eq.refine > 0) ? '+' + eq.refine + ' ' : '';
-        el.textContent = refStr + (name.length > 14 ? name.substring(0, 13) + '\u2026' : name);
-        el.title = refStr + name;
+        var fullName = getEquipFullName(slotKey);
+        var shortName = fullName.length > 16 ? fullName.substring(0, 15) + '\u2026' : fullName;
+        el.innerHTML = '<img class="bs-doll-icon" src="' + ITEM_ICON_URL + eq.item.id + '.png" onerror="this.style.display=\'none\'">' +
+          '<span>' + esc(shortName) + '</span>';
+        el.title = fullName;
         el.classList.add('equipped');
       } else {
-        el.textContent = '-';
+        el.innerHTML = '-';
         el.title = slotKey;
         el.classList.remove('equipped');
       }
@@ -2326,6 +2430,7 @@
         val = Math.max(0, Math.min(15, val));
         if (bsState.equip[slotKey]) {
           bsState.equip[slotKey].refine = val;
+          updateEquipDisplay(slotKey);
           updateBonusSummary();
           recalcDPS();
           emitEquipToROCBuild();
@@ -2481,6 +2586,7 @@
         sub = 'DEF ' + (item.def || 0) + (item.slots ? ' | S' + item.slots : '');
       }
       return '<div class="bs-dd-item" data-item-id="' + item.id + '" data-slot="' + slotKey + '">' +
+        '<img class="bs-dd-icon" src="' + ITEM_ICON_URL + item.id + '.png" onerror="this.style.display=\'none\'">' +
         '<span class="dd-name">' + esc(item.name) + '</span>' +
         '<span class="dd-sub">' + sub + '</span>' +
         '</div>';

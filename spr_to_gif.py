@@ -264,8 +264,8 @@ def main():
             body_idx, body_rgba, body_pal = parse_spr(spr_data)
             body_actions = parse_act(act_data)
 
-            if not body_actions or not body_actions[0]:
-                print(f'  [{job_id}] No idle action')
+            if not body_actions:
+                print(f'  [{job_id}] No actions')
                 continue
 
             # Select head based on gender
@@ -273,15 +273,24 @@ def main():
             gender_key = 'head_f' if job_num in FEMALE_JOBS else 'head_m'
             head = head_data.get(gender_key)
 
-            # Action 0 = idle (facing south)
-            body_idle = body_actions[0]
+            # Action 8 = walking (facing south), fallback to 0 (idle)
+            walk_action = 8
+            if walk_action >= len(body_actions) or not body_actions[walk_action]:
+                walk_action = 0
+            body_frames = body_actions[walk_action]
             gif_images = []
 
-            for fi, body_frame in enumerate(body_idle):
-                if head and head['actions'] and head['actions'][0]:
-                    # Use corresponding head frame (wrap if head has fewer frames)
-                    head_idle = head['actions'][0]
-                    head_frame = head_idle[fi % len(head_idle)]
+            for fi, body_frame in enumerate(body_frames):
+                head_action_idx = walk_action
+                if head and head['actions']:
+                    if head_action_idx >= len(head['actions']):
+                        head_action_idx = 0
+                    head_act_frames = head['actions'][head_action_idx]
+                    head_frame = head_act_frames[fi % len(head_act_frames)] if head_act_frames else None
+                else:
+                    head_frame = None
+
+                if head and head_frame:
                     img = render_composite_frame(
                         (body_idx, body_rgba, body_pal), body_pal, body_frame,
                         head['spr'], head['palette'], head_frame
