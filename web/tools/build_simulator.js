@@ -940,18 +940,25 @@
       .bs-chara-doll {\n\
         display: grid;\n\
         grid-template-columns: 1fr auto 1fr;\n\
-        grid-template-rows: auto auto auto auto auto;\n\
-        gap: 4px 8px;\n\
+        grid-template-rows: auto auto auto auto auto auto;\n\
+        grid-template-areas:\n\
+          \". headTop .\"\n\
+          \"headMid sprite headLow\"\n\
+          \"weapon sprite shield\"\n\
+          \"armor sprite garment\"\n\
+          \". shoes .\"\n\
+          \"acc1 . acc2\";\n\
+        gap: 5px 10px;\n\
         align-items: center;\n\
+        justify-items: center;\n\
       }\n\
       .bs-chara-body {\n\
-        grid-column: 2;\n\
-        grid-row: 1 / 6;\n\
+        grid-area: sprite;\n\
         display: flex;\n\
         flex-direction: column;\n\
         align-items: center;\n\
         justify-content: center;\n\
-        min-height: 160px;\n\
+        min-height: 140px;\n\
         min-width: 80px;\n\
         user-select: none;\n\
         position: relative;\n\
@@ -995,8 +1002,16 @@
       .bs-doll-icon {\n\
         width: 18px; height: 18px; object-fit: contain; flex-shrink: 0;\n\
       }\n\
-      .bs-doll-slot.left { justify-self: end; }\n\
-      .bs-doll-slot.right { justify-self: start; }\n\
+      .bs-doll-slot[id$=headTop] { grid-area: headTop; }\n\
+      .bs-doll-slot[id$=headMid] { grid-area: headMid; justify-self: end; }\n\
+      .bs-doll-slot[id$=headLow] { grid-area: headLow; justify-self: start; }\n\
+      .bs-doll-slot[id$=weapon] { grid-area: weapon; justify-self: end; }\n\
+      .bs-doll-slot[id$=shield] { grid-area: shield; justify-self: start; }\n\
+      .bs-doll-slot[id$=armor] { grid-area: armor; justify-self: end; }\n\
+      .bs-doll-slot[id$=garment] { grid-area: garment; justify-self: start; }\n\
+      .bs-doll-slot[id$=shoes] { grid-area: shoes; }\n\
+      .bs-doll-slot[id$=acc1] { grid-area: acc1; justify-self: end; }\n\
+      .bs-doll-slot[id$=acc2] { grid-area: acc2; justify-self: start; }\n\
       \n\
       /* No-data message */\n\
       .bs-no-data {\n\
@@ -1042,17 +1057,17 @@
               <div class="bs-chara-job" id="bs-chara-job">Novice</div>\
               <div class="bs-chara-lv" id="bs-chara-lv">Base Lv 1 / Job Lv 1</div>\
               <div class="bs-chara-doll">\
-                <div class="bs-doll-slot left" id="bs-doll-headTop" title="Head Top">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-headTop" title="Head Top">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-headMid" title="Head Mid">-</div>\
                 <div class="bs-chara-body" id="bs-chara-body"></div>\
-                <div class="bs-doll-slot right" id="bs-doll-headMid" title="Head Mid">-</div>\
-                <div class="bs-doll-slot left" id="bs-doll-weapon" title="Weapon">-</div>\
-                <div class="bs-doll-slot right" id="bs-doll-shield" title="Shield">-</div>\
-                <div class="bs-doll-slot left" id="bs-doll-armor" title="Armor">-</div>\
-                <div class="bs-doll-slot right" id="bs-doll-garment" title="Garment">-</div>\
-                <div class="bs-doll-slot left" id="bs-doll-acc1" title="Accessory 1">-</div>\
-                <div class="bs-doll-slot right" id="bs-doll-acc2" title="Accessory 2">-</div>\
-                <div class="bs-doll-slot left" id="bs-doll-shoes" title="Shoes">-</div>\
-                <div class="bs-doll-slot right" id="bs-doll-headLow" title="Head Low">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-headLow" title="Head Low">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-weapon" title="Weapon">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-shield" title="Shield">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-armor" title="Armor">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-garment" title="Garment">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-shoes" title="Shoes">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-acc1" title="Accessory 1">-</div>\
+                <div class="bs-doll-slot" id="bs-doll-acc2" title="Accessory 2">-</div>\
               </div>\
             </div>\
             <div class="bs-section-title" style="margin-top:0"><span class="bs-icon">&#9733;</span> Bonuses Summary</div>\
