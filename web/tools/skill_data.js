@@ -1,5 +1,5 @@
 /**
- * ROC Classic Pre-Renewal Skill Database
+ * ROC Classic Renewal Skill Database
  * ~46 farming/damage skills with per-level data
  *
  * Schema:
@@ -8,6 +8,8 @@
  *     ignoresDef, ignoresFlee,
  *     perLevel: [[level, damagePercent, hitCount, castTime(ms), afterDelay(ms), spCost], ...]
  *   }
+ *   Note: damagePercent is TOTAL damage %. hitCount = actual damage packets.
+ *   For "split" skills (visual multi-hit but total damage), use hitCount=1.
  *
  * Class IDs (rAthena):
  *   0=Novice 1=Swordman 2=Mage 3=Archer 4=Acolyte 5=Merchant 6=Thief
@@ -17,7 +19,7 @@
  *   4012=Sniper 4013=Assassin Cross 4015=Paladin 4016=Champion
  *   4017=Professor 4018=Stalker 4019=Creator 4020=Clown 4021=Gypsy
  *
- * Reference: rAthena skill_db.yml / pre-renewal formulas
+ * Reference: rAthena skill_db.yml / renewal formulas (battle.cpp)
  */
 (function () {
   'use strict';
@@ -106,7 +108,7 @@
       ]
     },
 
-    // KN_BRANDISHSPEAR
+    // KN_BRANDISHSPEAR (Renewal: 400+100*Lv %, split 3 visual hits)
     57: {
       name: 'Brandish Spear',
       class: [7, 4008],
@@ -118,20 +120,21 @@
       ignoresDef: false,
       ignoresFlee: false,
       perLevel: [
-        [1,  120, 1,  0, 700, 12],
-        [2,  140, 1,  0, 700, 12],
-        [3,  160, 1,  0, 700, 12],
-        [4,  180, 1,  0, 700, 12],
-        [5,  200, 1,  0, 700, 12],
-        [6,  220, 1,  0, 700, 12],
-        [7,  240, 1,  0, 700, 12],
-        [8,  260, 1,  0, 700, 12],
-        [9,  280, 1,  0, 700, 12],
-        [10, 300, 1,  0, 700, 12]
+        // [lv, total dmg%, hits, VCT(ms), cooldown(ms), sp]
+        [1,   500, 1, 500, 1000, 24],
+        [2,   600, 1, 500, 1000, 24],
+        [3,   700, 1, 500, 1000, 24],
+        [4,   800, 1, 500, 1000, 24],
+        [5,   900, 1, 500, 1000, 24],
+        [6,  1000, 1, 500, 1000, 24],
+        [7,  1100, 1, 500, 1000, 24],
+        [8,  1200, 1, 500, 1000, 24],
+        [9,  1300, 1, 500, 1000, 24],
+        [10, 1400, 1, 500, 1000, 24]
       ]
     },
 
-    // KN_BOWLINGBASH
+    // KN_BOWLINGBASH (Renewal: 100+40*Lv % per hit, 2 hits)
     62: {
       name: 'Bowling Bash',
       class: [7, 4008],
@@ -143,16 +146,17 @@
       ignoresDef: false,
       ignoresFlee: false,
       perLevel: [
-        [1,  200, 1, 0, 2500, 13],
-        [2,  250, 1, 0, 2500, 14],
-        [3,  300, 1, 0, 2500, 15],
-        [4,  350, 1, 0, 2500, 16],
-        [5,  400, 1, 0, 2500, 17],
-        [6,  450, 1, 0, 2500, 18],
-        [7,  500, 1, 0, 2500, 19],
-        [8,  550, 1, 0, 2500, 20],
-        [9,  600, 1, 0, 2500, 21],
-        [10, 700, 1, 0, 2500, 22]
+        // [lv, dmg% per hit, hits, fixedCast(ms), cooldown(ms), sp]
+        [1,  140, 2, 350, 1000, 13],
+        [2,  180, 2, 350, 1000, 14],
+        [3,  220, 2, 350, 1000, 15],
+        [4,  260, 2, 350, 1000, 16],
+        [5,  300, 2, 350, 1000, 17],
+        [6,  340, 2, 350, 1000, 18],
+        [7,  380, 2, 350, 1000, 19],
+        [8,  420, 2, 350, 1000, 20],
+        [9,  460, 2, 350, 1000, 21],
+        [10, 500, 2, 350, 1000, 22]
       ]
     },
 
@@ -441,7 +445,7 @@
       ]
     },
 
-    // AC_SHOWER
+    // AC_SHOWER (Renewal: 100+50+10*Lv %)
     47: {
       name: 'Arrow Shower',
       class: [3, 11, 19, 20, 4012, 4020, 4021],
@@ -449,20 +453,20 @@
       maxLv: 10,
       element: 'weapon',
       target: 'ground',
-      aoe: 3, // 3x3
+      aoe: 3, // 3x3, expands to 5x5 at Lv6+
       ignoresDef: false,
       ignoresFlee: false,
       perLevel: [
-        [1,   75, 1, 0, 1200, 15],
-        [2,   80, 1, 0, 1200, 15],
-        [3,   85, 1, 0, 1200, 15],
-        [4,   90, 1, 0, 1200, 15],
-        [5,   95, 1, 0, 1200, 15],
-        [6,  100, 1, 0, 1200, 15],
-        [7,  105, 1, 0, 1200, 15],
-        [8,  110, 1, 0, 1200, 15],
-        [9,  115, 1, 0, 1200, 15],
-        [10, 120, 1, 0, 1200, 15]
+        [1,  160, 1, 0, 500, 15],
+        [2,  170, 1, 0, 500, 15],
+        [3,  180, 1, 0, 500, 15],
+        [4,  190, 1, 0, 500, 15],
+        [5,  200, 1, 0, 500, 15],
+        [6,  210, 1, 0, 500, 15],
+        [7,  220, 1, 0, 500, 15],
+        [8,  230, 1, 0, 500, 15],
+        [9,  240, 1, 0, 500, 15],
+        [10, 250, 1, 0, 500, 15]
       ]
     },
 
@@ -639,7 +643,7 @@
      *  THIEF / ASSASSIN / ASSASSIN CROSS
      * ================================================================ */
 
-    // AS_SONICBLOW
+    // AS_SONICBLOW (Renewal: 100+100+100*Lv % total, split 8 visual hits)
     136: {
       name: 'Sonic Blow',
       class: [12, 4013],
@@ -650,18 +654,19 @@
       aoe: 0,
       ignoresDef: false,
       ignoresFlee: false,
-      // Total damage is divided into 8 visual hits
+      // Total damage split into 8 visual hits; +50% bonus if target HP<50%
       perLevel: [
-        [1,  500, 8, 0, 2000, 16],
-        [2,  600, 8, 0, 2000, 18],
-        [3,  700, 8, 0, 2000, 20],
-        [4,  800, 8, 0, 2000, 22],
-        [5,  900, 8, 0, 2000, 24],
-        [6, 1000, 8, 0, 2000, 26],
-        [7, 1100, 8, 0, 2000, 28],
-        [8, 1200, 8, 0, 2000, 30],
-        [9, 1300, 8, 0, 2000, 32],
-        [10,1400, 8, 0, 2000, 34]
+        // [lv, total dmg%, hits(1=total), cast(ms), cooldown(ms), sp]
+        [1,   300, 1, 0, 1000, 16],
+        [2,   400, 1, 0, 1000, 18],
+        [3,   500, 1, 0, 1000, 20],
+        [4,   600, 1, 0, 1000, 22],
+        [5,   700, 1, 0, 1000, 24],
+        [6,   800, 1, 0, 1000, 26],
+        [7,   900, 1, 0, 1000, 28],
+        [8,  1000, 1, 0, 1000, 30],
+        [9,  1100, 1, 0, 1000, 32],
+        [10, 1200, 1, 0, 1000, 34]
       ]
     },
 
@@ -690,7 +695,7 @@
      *  CRUSADER / PALADIN
      * ================================================================ */
 
-    // CR_HOLYCROSS
+    // CR_HOLYCROSS (Renewal: 100+35*Lv % per hit, 2 hits; 2H Spear doubles ratio)
     253: {
       name: 'Holy Cross',
       class: [14, 4015],
@@ -702,16 +707,16 @@
       ignoresDef: false,
       ignoresFlee: false,
       perLevel: [
-        [1,  135, 1, 0, 1000, 11],
-        [2,  170, 1, 0, 1000, 12],
-        [3,  205, 1, 0, 1000, 13],
+        [1,  135, 2, 0, 1000, 11],
+        [2,  170, 2, 0, 1000, 12],
+        [3,  205, 2, 0, 1000, 13],
         [4,  240, 2, 0, 1000, 14],
         [5,  275, 2, 0, 1000, 15],
         [6,  310, 2, 0, 1000, 16],
         [7,  345, 2, 0, 1000, 17],
         [8,  380, 2, 0, 1000, 18],
-        [9,  410, 2, 0, 1000, 19],
-        [10, 350, 2, 0, 1000, 20]
+        [9,  415, 2, 0, 1000, 19],
+        [10, 450, 2, 0, 1000, 20]
       ]
     },
 
@@ -741,7 +746,7 @@
       ]
     },
 
-    // CR_SHIELDBOOMERANG
+    // CR_SHIELDBOOMERANG (Renewal: -20+80*Lv %, + shield weight/refine)
     251: {
       name: 'Shield Boomerang',
       class: [14, 4015],
@@ -754,11 +759,11 @@
       ignoresFlee: false,
       // Damage based on shield weight and refine
       perLevel: [
-        [1, 130, 1, 0, 700, 12],
+        [1,  80, 1, 0, 700, 12],
         [2, 160, 1, 0, 700, 12],
-        [3, 190, 1, 0, 700, 12],
-        [4, 220, 1, 0, 700, 12],
-        [5, 250, 1, 0, 700, 12]
+        [3, 240, 1, 0, 700, 12],
+        [4, 320, 1, 0, 700, 12],
+        [5, 400, 1, 0, 700, 12]
       ]
     },
 
@@ -806,11 +811,11 @@
       ignoresFlee: false,
       // Damage depends on target DEF: higher DEF = more damage
       perLevel: [
-        [1, 150, 1, 1000, 500, 10],
-        [2, 200, 1, 1000, 500, 14],
-        [3, 250, 1, 1000, 500, 17],
-        [4, 300, 1, 1000, 500, 19],
-        [5, 350, 1, 1000, 500, 22]
+        [1, 175, 1, 500, 500, 10],
+        [2, 250, 1, 500, 500, 14],
+        [3, 325, 1, 500, 500, 17],
+        [4, 400, 1, 500, 500, 19],
+        [5, 475, 1, 500, 500, 22]
       ]
     },
 
@@ -1012,7 +1017,7 @@
      *  TRANS-CLASS EXCLUSIVE SKILLS
      * ================================================================ */
 
-    // LK_SPIRALPIERCE
+    // LK_SPIRALPIERCE (Renewal: 100+100*Lv % total, split 5 visual hits, +weapon weight)
     397: {
       name: 'Spiral Pierce',
       class: [4008],
@@ -1023,14 +1028,13 @@
       aoe: 0,
       ignoresDef: false,
       ignoresFlee: false,
-      // 5 hits; damage based on weapon weight
-      // Base: 150-350% + bonus from weapon weight
+      // Total damage split 5 visual hits; + bonus from weapon weight
       perLevel: [
-        [1, 150, 5, 1000, 2500, 18],
-        [2, 200, 5, 1200, 2500, 21],
-        [3, 250, 5, 1400, 2500, 24],
-        [4, 300, 5, 1600, 2500, 27],
-        [5, 350, 5, 1800, 2500, 30]
+        [1, 200, 1, 150, 1200, 18],
+        [2, 250, 1, 200, 1400, 21],
+        [3, 300, 1, 250, 1600, 24],
+        [4, 350, 1, 300, 1800, 27],
+        [5, 400, 1, 350, 2000, 30]
       ]
     },
 
@@ -1055,7 +1059,7 @@
       ]
     },
 
-    // ASC_BREAKER (Soul Breaker / Soul Destroyer)
+    // ASC_BREAKER (Renewal: (ATK+MATK) × (300+50*Lv)% × BaseLv/100)
     379: {
       name: 'Soul Breaker',
       class: [4013],
@@ -1066,20 +1070,18 @@
       aoe: 0,
       ignoresDef: false,
       ignoresFlee: false,
-      // Hybrid ATK + MATK; two parts:
-      //   Physical part (ATK%) + Fixed MATK part
-      //   ATK part uses weapon element, MATK part is neutral
+      // Hybrid ATK+MATK; weapon element for ATK, neutral for MATK
       perLevel: [
-        [1,  100, 2, 1000, 2000, 20],
-        [2,  200, 2, 1200, 2000, 20],
-        [3,  300, 2, 1400, 2000, 20],
-        [4,  400, 2, 1600, 2000, 20],
-        [5,  500, 2, 1800, 2000, 20],
-        [6,  600, 2, 2000, 2000, 20],
-        [7,  700, 2, 2200, 2000, 20],
-        [8,  800, 2, 2400, 2000, 20],
-        [9,  900, 2, 2600, 2000, 20],
-        [10,1000, 2, 2800, 2000, 20]
+        [1,  350, 1, 250, 1000, 20],
+        [2,  400, 1, 250, 1000, 20],
+        [3,  450, 1, 250, 1000, 20],
+        [4,  500, 1, 250, 1000, 20],
+        [5,  550, 1, 250, 1000, 20],
+        [6,  600, 1, 250, 1000, 20],
+        [7,  650, 1, 250, 1000, 20],
+        [8,  700, 1, 250, 1000, 20],
+        [9,  750, 1, 250, 1000, 20],
+        [10, 800, 1, 250, 1000, 20]
       ]
     },
 
@@ -1221,7 +1223,7 @@
       ]
     },
 
-    // SN_SHARPSHOOTING (ID:382) - Sniper AOE arrow skill
+    // SN_SHARPSHOOTING (Renewal: 600-1800%, AoE 5x5, high crit bonus)
     382: {
       name: 'Sharp Shooting',
       class: [4012],
@@ -1229,20 +1231,20 @@
       maxLv: 5,
       element: 'weapon',
       target: 'single',
-      aoe: 3, // pierces in a line, 3-cell width
+      aoe: 5, // 5x5 AoE splash
       ignoresDef: false,
       ignoresFlee: false,
-      // 200% crit bonus; can hit multiple targets in a line
+      // +200 crit bonus; AoE splash around target
       perLevel: [
-        [1, 200, 1, 1000, 2500, 18],
-        [2, 250, 1, 1000, 2500, 21],
-        [3, 300, 1, 1000, 2500, 24],
-        [4, 350, 1, 1000, 2500, 27],
-        [5, 400, 1, 1000, 2500, 30]
+        [1,  600, 1, 500, 500, 18],
+        [2,  900, 1, 500, 500, 21],
+        [3, 1200, 1, 500, 500, 24],
+        [4, 1500, 1, 500, 500, 27],
+        [5, 1800, 1, 500, 500, 30]
       ]
     },
 
-    // PA_SHIELDCHAIN (ID:421) - Paladin
+    // PA_SHIELDCHAIN (Renewal: 5 hits, total 500-1300%, +shield weight/refine)
     421: {
       name: 'Shield Chain',
       class: [4015],
@@ -1253,13 +1255,13 @@
       aoe: 0,
       ignoresDef: false,
       ignoresFlee: false,
-      // 5 hits; damage based on shield weight/refine
+      // 5 hits; + shield weight + (refine×4) added to ATK
       perLevel: [
-        [1, 150, 5, 1000, 1000, 28],
-        [2, 200, 5, 1000, 1000, 31],
-        [3, 250, 5, 1000, 1000, 34],
-        [4, 300, 5, 1000, 1000, 37],
-        [5, 350, 5, 1000, 1000, 40]
+        [1, 100, 5, 800, 1000, 28],
+        [2, 140, 5, 800, 1000, 31],
+        [3, 180, 5, 800, 1000, 34],
+        [4, 220, 5, 800, 1000, 37],
+        [5, 260, 5, 800, 1000, 40]
       ]
     },
 
