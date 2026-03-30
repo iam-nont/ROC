@@ -8,7 +8,12 @@ __pycache__/
 # Temp files
 temp_extract/
 dp_test_page.html
+temp_*.html
+roc_monsters_page.html
 NUL
+
+# Test artifacts
+test-results/
 
 # Raw data files (too large / not needed for web)
 *.yml
@@ -31,8 +36,14 @@ item_prices.json
 monster_page_raw.html
 roc_monster_post.json
 roc_monsters_parsed.json
+roc_official_spawns.json
 dp_spawns_scraped.json
 spawns/
 
 # Large BMP files
 web/*.bmp
+
+# Node / Cypress
+node_modules/
+cypress/screenshots/
+cypress/videos/

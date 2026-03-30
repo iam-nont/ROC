@@ -62,17 +62,36 @@ a:hover { text-decoration: underline; }
 /* Tabs */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   background: var(--bg2);
   border-bottom: 2px solid var(--border);
-  overflow-x: auto;
+  padding: 2px 4px 0;
+}
+.tab-group {
+  display: flex;
+  align-items: stretch;
+  padding: 0 2px;
+  margin-right: 2px;
+  border-right: 1px solid var(--border);
+}
+.tab-group:last-child { border-right: none; margin-right: 0; }
+.tab-group-label {
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text2);
+  opacity: 0.5;
+  padding: 0 6px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .tab {
-  padding: 12px 28px;
+  padding: 10px 14px;
   cursor: pointer;
   border: none;
   background: none;
   color: var(--text2);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   border-bottom: 3px solid transparent;
   transition: all 0.2s;
@@ -572,6 +591,21 @@ td.cat-col { }
   opacity: 1;
 }
 
+/* Build Actions */
+.build-actions {
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; gap: 6px;
+}
+.build-btn {
+  padding: 4px 10px; font-size: 11px; cursor: pointer;
+  background: var(--bg2); color: var(--text2); border: 1px solid var(--border);
+  border-radius: 4px; transition: all 0.2s;
+}
+.build-btn:hover { color: var(--gold); border-color: var(--gold); }
+.build-btn-danger:hover { color: #e74c3c; border-color: #e74c3c; }
+.build-save-status { font-size: 10px; color: var(--gold); opacity: 0; transition: opacity 0.3s; }
+.header { position: relative; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .header { padding: 16px; }
@@ -590,13 +624,36 @@ td.cat-col { }
   <img src="guide_map_2025.png" alt="ROC" class="header-logo">
   <h1>RO Classic Database TH</h1>
   <div class="stats" id="headerStats"></div>
+  <div class="build-actions" id="buildActions" style="display:none">
+    <button class="build-btn" id="btnExportBuild" title="Export Build as JSON">Export</button>
+    <button class="build-btn" id="btnImportBuild" title="Import Build from JSON">Import</button>
+    <button class="build-btn build-btn-danger" id="btnClearBuild" title="Clear saved build">Clear</button>
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
+    <span class="build-save-status" id="buildSaveStatus"></span>
+  </div>
 </div>
 
 <div class="tabs">
-  <button class="tab active" data-tab="items">Item Database</button>
-  <button class="tab" data-tab="cards">Card Database</button>
-  <button class="tab" data-tab="monsters">Monster Database</button>
-  <button class="tab" data-tab="worldmap">World Map</button>
+  <div class="tab-group">
+    <span class="tab-group-label">DB</span>
+    <button class="tab active" data-tab="items">Items</button>
+    <button class="tab" data-tab="cards">Cards</button>
+    <button class="tab" data-tab="monsters">Monsters</button>
+    <button class="tab" data-tab="worldmap">World Map</button>
+  </div>
+  <div class="tab-group">
+    <span class="tab-group-label">Sim</span>
+    <button class="tab" data-tab="stat-sim">Status</button>
+    <button class="tab" data-tab="build-sim">Build</button>
+    <button class="tab" data-tab="damage-calc">Damage</button>
+  </div>
+  <div class="tab-group">
+    <span class="tab-group-label">Tools</span>
+    <button class="tab" data-tab="zeny-calc">Zeny</button>
+    <button class="tab" data-tab="level-guide">Leveling</button>
+    <button class="tab" data-tab="mvp-timer">MVP Timer</button>
+    <button class="tab" data-tab="compare">Compare</button>
+  </div>
 </div>
 
 <div class="content">
@@ -755,6 +812,27 @@ td.cat-col { }
       </div>
     </div>
   </div>
+
+  <!-- STATUS SIMULATOR -->
+  <div class="section" id="sec-stat-sim"></div>
+
+  <!-- DAMAGE CALC -->
+  <div class="section" id="sec-damage-calc"></div>
+
+  <!-- ZENY CALCULATOR -->
+  <div class="section" id="sec-zeny-calc"></div>
+
+  <!-- LEVELING GUIDE -->
+  <div class="section" id="sec-level-guide"></div>
+
+  <!-- MVP TIMER -->
+  <div class="section" id="sec-mvp-timer"></div>
+
+  <!-- COMPARE TOOL -->
+  <div class="section" id="sec-compare"></div>
+
+  <!-- BUILD SIMULATOR -->
+  <div class="section" id="sec-build-sim"></div>
 </div>
 
 <!-- Detail Overlay -->
@@ -772,6 +850,15 @@ td.cat-col { }
 <script src="spawn_data.js"></script>
 <script src="map_grid.js"></script>
 <script src="map_connections.js"></script>
+<script src="tools/build_state.js"></script>
+<script src="tools/skill_data.js"></script>
+<script src="tools/stat_simulator.js"></script>
+<script src="tools/damage_calc.js"></script>
+<script src="tools/zeny_calc.js"></script>
+<script src="tools/level_guide.js"></script>
+<script src="tools/mvp_timer.js"></script>
+<script src="tools/compare_tool.js"></script>
+<script src="tools/build_simulator.js"></script>
 <script>
 // ===================== GLOBALS =====================
 const PER_PAGE = 50;
@@ -862,6 +949,64 @@ function init() {
   filterItems();
   filterCards();
   filterMobs();
+
+  // Status Simulator
+  if (typeof initStatSimulator === 'function') initStatSimulator();
+
+  // Damage Calculator
+  if (typeof initDamageCalc === 'function') initDamageCalc();
+
+  // Zeny Calculator
+  if (typeof initZenyCalc === 'function') initZenyCalc();
+
+  // Leveling Guide
+  if (typeof initLevelGuide === 'function') initLevelGuide();
+
+  // MVP Timer
+  if (typeof initMvpTimer === 'function') initMvpTimer();
+
+  // Compare Tool
+  if (typeof initCompareTool === 'function') initCompareTool();
+
+  // Build Simulator
+  if (typeof initBuildSimulator === 'function') initBuildSimulator();
+
+  // Build Actions (Export/Import/Clear)
+  var actionsEl = document.getElementById('buildActions');
+  if (actionsEl && window.ROC_BUILD) {
+    actionsEl.style.display = 'flex';
+    document.getElementById('btnExportBuild').addEventListener('click', function () {
+      ROC_BUILD.exportBuild();
+    });
+    document.getElementById('btnImportBuild').addEventListener('click', function () {
+      document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        if (ROC_BUILD.importBuild(ev.target.result)) {
+          showSaveStatus('Imported!');
+        } else {
+          alert('Invalid build file');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+    document.getElementById('btnClearBuild').addEventListener('click', function () {
+      if (confirm('Clear saved build data?')) {
+        ROC_BUILD.clearBuild();
+        location.reload();
+      }
+    });
+  }
+
+  function showSaveStatus(msg) {
+    var el = document.getElementById('buildSaveStatus');
+    if (el) { el.textContent = msg; el.style.opacity = '1'; setTimeout(function () { el.style.opacity = '0'; }, 2000); }
+  }
 }
 
 // ===================== TABS =====================

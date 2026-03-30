@@ -143,7 +143,8 @@ def extract_all_fields(desc_lines, decode_func):
 
     fields['equipLocation'] = extract_field_from_desc(
         desc_lines, decode_func,
-        r'ตำแหน่ง\s*:\s*(.+)',
+        r'ตำแหน่ง\s*:\s*([^\s|]+(?:\s*\+\s*[^\s|]+)*)',
+        r'ใช้สำหรับ\s*:\s*([^\s|]+(?:\s*\+\s*[^\s|]+)*)',
         as_int=False
     )
 

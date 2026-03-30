@@ -43,6 +43,10 @@ def clean_equip_location(loc):
         'bottom': 'Lower Headgear',
         'low': 'Lower Headgear',
         'medium': 'Middle Headgear',
+        'upper medium': 'Upper+Middle Headgear',
+        'upper-medium': 'Upper+Middle Headgear',
+        'mid upper': 'Upper+Middle Headgear',
+        'mid-upper': 'Upper+Middle Headgear',
     }
     for k, v in mapping.items():
         if loc_lower == k:

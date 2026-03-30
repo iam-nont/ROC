@@ -1,0 +1,14 @@
+{
+  "name": "roc-tests",
+  "private": true,
+  "scripts": {
+    "serve": "npx serve web -p 3939 -s",
+    "test": "npx start-server-and-test serve http://localhost:3939 'npx playwright test'",
+    "test:headed": "npx start-server-and-test serve http://localhost:3939 'npx playwright test --headed'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "serve": "^14.0.0",
+    "start-server-and-test": "^2.0.0"
+  }
+}
