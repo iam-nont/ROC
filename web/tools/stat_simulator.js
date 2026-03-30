@@ -136,7 +136,7 @@
     }
 
     // Renewal formulas (ROC Awakening)
-    const statusATK  = Math.floor(baseLv / 4) + str + Math.floor(dex / 5) + Math.floor(luk / 3);
+    const statusATK  = Math.floor(baseLv / 4) + str + Math.floor(str * str / 100) + Math.floor(dex / 5) + Math.floor(luk / 3);
     const statusMATK = Math.floor(baseLv / 4) + int_ + Math.floor(int_ / 2) + Math.floor(dex / 5) + Math.floor(luk / 3);
 
     return {

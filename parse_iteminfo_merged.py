@@ -127,13 +127,13 @@ def extract_all_fields(desc_lines, decode_func):
 
     fields['weaponType'] = extract_field_from_desc(
         desc_lines, decode_func,
-        r'ประเภท\s*:\s*(\S+)',
+        r'ประเภท\s*:\s*(.+?)(?:\s*พลัง|\s*น้ำหนัก|\s*\||\s*$)',
         as_int=False
     )
 
     fields['weaponLevel'] = extract_field_from_desc(
         desc_lines, decode_func,
-        r'Lv\s+ของอาวุธ\s*:\s*(\d+)'
+        r'(?:Lv\s+ของอาวุธ|อาวุธเลเวล)\s*:?\s*(\d+)'
     )
 
     fields['requiredLevel'] = extract_field_from_desc(

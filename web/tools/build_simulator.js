@@ -275,7 +275,18 @@
     if (/instrument/i.test(t)) return 'Instrument';
     if (/whip/i.test(t)) return 'Whip';
     if (/huuma/i.test(t)) return 'Katar';
+    if (/two.?hand/i.test(t)) return '2H Sword';
     return 'Dagger';
+  }
+
+  function isTwoHanded(item) {
+    if (!item) return false;
+    var wt = normalizeWtype(item.wtype);
+    if (wt === '2H Sword' || wt === 'Bow' || wt === 'Katar') return true;
+    if (/two.?hand/i.test(item.wtype || '')) return true;
+    // Spears can be 1H or 2H - check wtype string
+    if (wt === 'Spear' && /two.?hand/i.test(item.wtype || '')) return true;
+    return false;
   }
 
   function debounce(fn, delay) {
@@ -1392,6 +1403,16 @@
     var optsWrap = document.getElementById('bs-opts-' + slotKey);
     if (optsWrap) optsWrap.style.display = 'block';
 
+    // 2H weapon / shield mutual exclusion
+    if (slotKey === 'weapon' && isTwoHanded(item)) {
+      clearEquipItem('shield');
+    } else if (slotKey === 'shield') {
+      var curWeapon = bsState.equip.weapon;
+      if (curWeapon && isTwoHanded(curWeapon.item)) {
+        clearEquipItem('weapon');
+      }
+    }
+
     updateBonusSummary();
     recalcDPS();
     emitEquipToROCBuild();
@@ -1899,8 +1920,8 @@
     luk += (bsState.costumeLUK || 0) + (opts.LUK || 0);
 
     // Recalculate StatusATK with Renewal formula:
-    // Melee: floor(BaseLv/4) + STR + floor(DEX/5) + floor(LUK/3)
-    statusATK = Math.floor(baseLv / 4) + str + Math.floor(dex / 5) + Math.floor(luk / 3);
+    // Melee: floor(BaseLv/4) + STR + floor(STR²/100) + floor(DEX/5) + floor(LUK/3)
+    statusATK = Math.floor(baseLv / 4) + str + Math.floor(str * str / 100) + Math.floor(dex / 5) + Math.floor(luk / 3);
 
     // ASPD + option/costume bonus
     aspd = Math.min(190, aspd + cosASPD + (opts.ASPD || 0));
@@ -1918,15 +1939,21 @@
     var weaponItem = bsState.equip.weapon;
     if (weaponItem) {
       weaponATK = weaponItem.item.atk || 0;
-      weaponLevel = weaponItem.item.wlv || 1;
+      weaponLevel = weaponItem.item.wlv || 0;
       weaponSlots = weaponItem.item.slots || 0;
       weaponWtype = normalizeWtype(weaponItem.item.wtype);
       isRanged = /bow|gun|instrument|whip/i.test(weaponWtype);
+      // Fallback: parse weapon level from description if missing
+      if (weaponLevel <= 0 && weaponItem.item.desc) {
+        var wlvMatch = weaponItem.item.desc.match(/(?:อาวุธเลเวล|Lv\s+ของอาวุธ|weapon\s*lv)\s*:?\s*(\d)/i);
+        if (wlvMatch) weaponLevel = parseInt(wlvMatch[1], 10);
+      }
+      if (weaponLevel <= 0) weaponLevel = 1;
     }
 
     // Ranged weapons: StatusATK uses DEX as main stat
     if (isRanged) {
-      statusATK = Math.floor(baseLv / 4) + Math.floor(str / 5) + dex + Math.floor(luk / 3);
+      statusATK = Math.floor(baseLv / 4) + Math.floor(str / 5) + dex + Math.floor(dex * dex / 100) + Math.floor(luk / 3);
     }
 
     // 3. Refine ATK
@@ -1938,10 +1965,9 @@
     // 5. Weapon variance
     var variancePct = WEAPON_VARIANCE[weaponLevel] || 0.10;
 
-    // 6. Renewal ATK: StatusATK x2 is fixed, WeaponATK has variance
-    // Total = StatusATK*2 + WeaponATK(+-variance) + RefineATK + BonusATK
-    var minTotalATK = statusATK * 2 + Math.floor(weaponATK * (1 - variancePct)) + refineATK + bonusATK;
-    var maxTotalATK = statusATK * 2 + Math.floor(weaponATK * (1 + variancePct)) + refineATK + bonusATK;
+    // 6. Renewal ATK: StatusATK + WeaponATK(+-variance) + RefineATK + BonusATK
+    var minTotalATK = statusATK + Math.floor(weaponATK * (1 - variancePct)) + refineATK + bonusATK;
+    var maxTotalATK = statusATK + Math.floor(weaponATK * (1 + variancePct)) + refineATK + bonusATK;
     var avgTotalATK = Math.floor((minTotalATK + maxTotalATK) / 2);
 
     // 7. Get skill data
@@ -1977,8 +2003,8 @@
       var statusMATK = Math.floor(baseLv / 4) + int_ + Math.floor(int_ / 2) + Math.floor(dex / 5) + Math.floor(luk / 3);
       var weaponMATK = weaponATK; // weapon MATK = weapon ATK for staff
       bonusATK = (bsState.bonusATK || 0) + cosMATK + (opts.MATK || 0);
-      minTotalATK = statusMATK * 2 + Math.floor(weaponMATK * (1 - variancePct)) + refineATK + bonusATK;
-      maxTotalATK = statusMATK * 2 + Math.floor(weaponMATK * (1 + variancePct)) + refineATK + bonusATK;
+      minTotalATK = statusMATK + Math.floor(weaponMATK * (1 - variancePct)) + refineATK + bonusATK;
+      maxTotalATK = statusMATK + Math.floor(weaponMATK * (1 + variancePct)) + refineATK + bonusATK;
       avgTotalATK = Math.floor((minTotalATK + maxTotalATK) / 2);
     }
 
