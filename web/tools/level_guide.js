@@ -231,6 +231,19 @@
 .lg-loading {
   text-align: center; padding: 40px; color: var(--text2); font-size: 14px;
 }
+
+/* Use Build button */
+.lg-build-btn {
+  background: var(--bg3); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+  transition: all 0.2s; align-self: flex-end;
+}
+.lg-build-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lg-build-btn.active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
   `;
   document.head.appendChild(STYLE);
 
@@ -238,8 +251,8 @@
   const CARDS_PER_PAGE = 30;
   // Assumed kills per hour (accounting for travel, looting, varied mob difficulty)
   const KILLS_PER_HOUR_BASE = 300;
-  // Max level for slider
-  const MAX_LEVEL = 99;
+  // Max level for slider (Awakened classes go to 120)
+  const MAX_LEVEL = 120;
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -303,14 +316,34 @@
     return map;
   }
 
+  /** Walk time between mobs based on map spawn density */
+  function getWalkTime(mapTotalCount) {
+    // More spawns = mobs closer together = less walk time
+    // Reference: 50 mobs → 3s walk, scale inversely
+    const t = 3.0 * (50 / Math.max(mapTotalCount, 1));
+    return Math.max(0.5, Math.min(t, 15));
+  }
+
   /** Estimate kills per hour for a monster given player level */
-  function estimateKillsPerHour(playerLv, monsterLv, monsterHp) {
+  function estimateKillsPerHour(playerLv, monsterLv, monsterHp, fullMonster, useBuild, mapTotalCount) {
+    const walkTime = getWalkTime(mapTotalCount || 50);
+    // If Build integration active, use actual DPS
+    if (useBuild && fullMonster && window.ROC_BUILD && ROC_BUILD.calcDamageVsMonster) {
+      const dps = ROC_BUILD.calcDamageVsMonster(fullMonster);
+      if (dps > 0) {
+        const hp = monsterHp || 1;
+        const timeToKill = hp / dps;
+        return Math.max(1, Math.floor(3600 / (timeToKill + walkTime)));
+      }
+      return 0;
+    }
     // Simplified: higher level player kills faster; very tough mobs = fewer kills
-    // Base: 300 kills/hr for equal-level mob with ~500 HP
-    // Scale by HP ratio and level advantage
     const hpFactor = Math.max(0.05, 500 / Math.max(monsterHp, 1));
     const lvAdv = Math.max(0.2, 1 + (playerLv - monsterLv) * 0.03);
-    return Math.min(KILLS_PER_HOUR_BASE * 2, Math.max(10, KILLS_PER_HOUR_BASE * hpFactor * lvAdv));
+    const rawKills = KILLS_PER_HOUR_BASE * hpFactor * lvAdv;
+    // Cap by walk time: can't kill more than 3600/walkTime per hour
+    const maxByWalk = Math.floor(3600 / walkTime);
+    return Math.min(maxByWalk, Math.max(10, rawKills));
   }
 
   /** Level range bar color */
@@ -328,15 +361,16 @@
    * Returns array of { mapCode, displayName, isDungeon, avgLv, minLv, maxLv,
    *   monsters[], score, baseExpHr, jobExpHr, tooLow }
    */
-  function analyzeAllMaps(playerLv, monsterMap) {
+  function analyzeAllMaps(playerLv, monsterMap, useBuildDPS) {
     const spawns = (typeof MAP_SPAWNS !== 'undefined') ? MAP_SPAWNS : {};
     const results = [];
 
     for (const [mapCode, mobs] of Object.entries(spawns)) {
       if (!mobs || !mobs.length) continue;
 
-      // Filter out special mobs (respawn timer mobs with very low count, plants, etc.)
-      // Keep everything but mark appropriately
+      // Pre-calculate total spawn count for walk time estimation
+      const mapSpawnTotal = mobs.reduce((sum, sp) => sum + (sp.c || 1), 0);
+
       let totalScore = 0;
       let totalBaseExpHr = 0;
       let totalJobExpHr = 0;
@@ -370,8 +404,8 @@
         // Score: weighted by spawn count and exp efficiency
         totalScore += effectiveBaseExp * count;
 
-        // Estimated exp per hour (simplified: assume player can cycle through spawns)
-        const killsHr = estimateKillsPerHour(playerLv, lv, hp);
+        // Estimated exp per hour
+        const killsHr = estimateKillsPerHour(playerLv, lv, hp, full, useBuildDPS, mapSpawnTotal);
         // Each mob type contributes proportionally to its spawn fraction
         totalBaseExpHr += effectiveBaseExp * Math.min(killsHr, count * 6); // cap by respawn
         totalJobExpHr += effectiveJobExp * Math.min(killsHr, count * 6);
@@ -392,6 +426,7 @@
           penalty: penalty,
           effectiveBaseExp: effectiveBaseExp,
           spriteUrl: full ? full.spriteUrl : null,
+          killsHr: killsHr,
         });
       }
 
@@ -433,6 +468,7 @@
     let sortBy = 'score';       // 'score' | 'baseExp' | 'monLv'
     let searchQ = '';
     let currentPage = 1;
+    let useBuild = false;
 
     // ── Build Controls ───────────────────────────────────────────────────────
     section.innerHTML = `
@@ -461,6 +497,7 @@
             <option value="monLv">Monster Level</option>
           </select>
         </div>
+        <button id="lgUseBuild" class="lg-build-btn" title="Sync level and use DPS from Build Simulator for accurate exp/hr">Use Build</button>
         <div class="lg-ctrl-group lg-search-box">
           <label>Search</label>
           <span class="lg-search-icon">\uD83D\uDD0D</span>
@@ -526,9 +563,45 @@
       }, 200);
     });
 
+    // Use Build button
+    const elUseBuild = document.getElementById('lgUseBuild');
+    elUseBuild.addEventListener('click', () => {
+      useBuild = !useBuild;
+      elUseBuild.classList.toggle('active', useBuild);
+      if (useBuild && window.ROC_BUILD) {
+        const buildLv = ROC_BUILD.state.baseLv || 1;
+        if (buildLv > 0) {
+          playerLv = buildLv;
+          elSlider.max = MAX_LEVEL;
+          elSlider.value = playerLv;
+          elNumInput.max = MAX_LEVEL;
+          elNumInput.value = playerLv;
+          elDisplay.textContent = playerLv;
+        }
+      }
+      currentPage = 1;
+      render();
+    });
+
+    // Listen for Build state changes (level/stats/equip)
+    if (window.ROC_BUILD) {
+      ROC_BUILD.on('*', function () {
+        if (!useBuild) return;
+        const buildLv = ROC_BUILD.state.baseLv || 1;
+        if (buildLv !== playerLv) {
+          playerLv = buildLv;
+          elSlider.value = playerLv;
+          elNumInput.value = playerLv;
+          elDisplay.textContent = playerLv;
+        }
+        currentPage = 1;
+        render();
+      });
+    }
+
     // ── Render ────────────────────────────────────────────────────────────────
     function render() {
-      let maps = analyzeAllMaps(playerLv, monsterMap);
+      let maps = analyzeAllMaps(playerLv, monsterMap, useBuild);
 
       // Filter by map type
       if (mapTypeFilter === 'field') {
@@ -575,11 +648,14 @@
       const fieldCount = maps.filter(m => !m.dungeon).length;
       const dungeonCount = maps.filter(m => m.dungeon).length;
       const goodMaps = maps.filter(m => !m.tooLow).length;
+      const buildLabel = useBuild ? '<span style="color:var(--accent)">Using Build DPS</span>' : '';
       elSummary.innerHTML = `
-        <span>Maps found: <b>${totalMaps}</b></span>
+        <span>Lv <b>${playerLv}</b></span>
+        <span>Maps: <b>${totalMaps}</b></span>
         <span>Field: <b>${fieldCount}</b></span>
         <span>Dungeon: <b>${dungeonCount}</b></span>
         <span>Recommended: <b>${goodMaps}</b></span>
+        ${buildLabel}
       `;
 
       // Paginate
@@ -660,12 +736,14 @@
         const spriteImg = mob.id
           ? `<img class="lg-mob-sprite" src="https://static.divine-pride.net/images/mobs/png/${mob.id}.png" onerror="this.style.visibility='hidden'" alt="">`
           : '<span class="lg-mob-sprite"></span>';
+        const killsInfo = useBuild ? `<span class="lg-mob-lv" style="color:var(--accent)">${fmt(mob.killsHr)}/hr</span>` : '';
         return `<div class="lg-mob-row">
           ${spriteImg}
           <span class="lg-mob-name">${escHtml(mob.name)}</span>
           <span class="lg-mob-lv">Lv${mob.lv}</span>
           <span class="lg-mob-cnt">x${mob.count}</span>
           <span class="lg-mob-exp">${fmt(mob.baseExp)} exp</span>
+          ${killsInfo}
           <span class="lg-mob-penalty ${pClass}">${penaltyStr}</span>
         </div>`;
       }).join('');

@@ -70,13 +70,14 @@ test.describe('Renewal Formula Verification', () => {
     const atkText = await page.textContent('#ss-r-atk');
     const displayedATK = parseInt(atkText.trim());
 
-    // Expected: floor(99/4) + 99 + floor(1/5) + floor(1/3)
-    //         = 24 + 99 + 0 + 0 = 123
-    const expectedATK = Math.floor(99 / 4) + 99 + Math.floor(1 / 5) + Math.floor(1 / 3);
+    // Renewal: floor(99/4) + 99 + floor(99²/100) + floor(1/5) + floor(1/3)
+    //        = 24 + 99 + 98 + 0 + 0 = 221
+    const str = 99, dex = 1, luk = 1;
+    const expectedATK = Math.floor(99 / 4) + str + Math.floor(str * str / 100) + Math.floor(dex / 5) + Math.floor(luk / 3);
 
     console.log(`[Test 1] StatusATK — Expected: ${expectedATK}, Displayed: ${displayedATK}`);
     expect(displayedATK).toBe(expectedATK);
-    expect(displayedATK).toBe(123);
+    expect(displayedATK).toBe(221);
 
     // Also verify other displayed stats are consistent
     const hitText = await page.textContent('#ss-r-hit');
@@ -229,75 +230,6 @@ test.describe('Renewal Formula Verification', () => {
   });
 
   // ── Test 5: Damage Calculator standalone ──────────────────────────
-  test('Test 5: Damage Calculator — standalone damage output', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    // Click Damage tab
-    await page.click('button.tab[data-tab="damage-calc"]');
-    await expect(page.locator('#sec-damage-calc')).toBeVisible();
-
-    // Set BaseLv to 99
-    await page.fill('#dcBaseLv', '99');
-    await page.locator('#dcBaseLv').dispatchEvent('input');
-
-    // Set STR to 99
-    await page.fill('#dcSTR', '99');
-    await page.locator('#dcSTR').dispatchEvent('input');
-
-    // Set DEX to 1 (default), LUK to 1 (default)
-    await page.fill('#dcDEX', '1');
-    await page.locator('#dcDEX').dispatchEvent('input');
-    await page.fill('#dcLUK', '1');
-    await page.locator('#dcLUK').dispatchEvent('input');
-
-    // Search and select a weapon
-    await page.fill('#dcWeaponSearch', 'Katana');
-    await page.waitForTimeout(500);
-    const weaponItem = page.locator('#dcWeaponDD .dc-dd-item').first();
-    await expect(weaponItem).toBeVisible({ timeout: 5000 });
-    await weaponItem.click();
-    await page.waitForTimeout(300);
-
-    // Refine row should now be visible
-    await expect(page.locator('#dcRefineRow')).toBeVisible();
-
-    // Set refine to 7
-    await page.fill('#dcRefine', '7');
-    await page.locator('#dcRefine').dispatchEvent('input');
-    await page.waitForTimeout(500);
-
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'test5-damage-calc.png'), fullPage: false });
-
-    // Read damage outputs
-    const minDmgText = await page.textContent('#dcMinDmg');
-    const maxDmgText = await page.textContent('#dcMaxDmg');
-    const avgDmgText = await page.textContent('#dcAvgDmg');
-
-    const minDmg = parseInt(minDmgText.replace(/,/g, ''));
-    const maxDmg = parseInt(maxDmgText.replace(/,/g, ''));
-    const avgDmg = parseInt(avgDmgText.replace(/,/g, ''));
-
-    console.log(`[Test 5] Damage Output — Min: ${minDmg}, Max: ${maxDmg}, Avg: ${avgDmg}`);
-
-    // Damage should be > 0 since we have STR=99 and a weapon equipped with +7 refine
-    expect(minDmg).toBeGreaterThan(0);
-    expect(maxDmg).toBeGreaterThan(0);
-    expect(avgDmg).toBeGreaterThan(0);
-    expect(maxDmg).toBeGreaterThanOrEqual(minDmg);
-
-    // Verify refine ATK display
-    const refineATKText = await page.textContent('#dcRefineATK');
-    console.log(`[Test 5] Refine ATK display: "${refineATKText}"`);
-    expect(refineATKText).not.toBe('+0');
-
-    // Verify StatusATK calculation is correct:
-    // statusATK = floor(99/4) + 99 + floor(1/5) + floor(1/3) = 24+99+0+0 = 123
-    // The damage should reflect this (statusATK*2 = 246 + weaponATK +/- variance + refineATK)
-    // We can verify by checking the breakdown or just that the numbers are reasonable
-    expect(avgDmg).toBeGreaterThan(200); // Must be > 200 since statusATK*2 alone is 246
-  });
-
   // ── Test 6: Stat cap validation (120/130) ─────────────────────────
   test('Test 6: Stat cap validation — BaseLv 120, STR 130 accepted', async ({ page }) => {
     await navigateToStatSim(page);
@@ -333,19 +265,20 @@ test.describe('Renewal Formula Verification', () => {
     const atkText = await page.textContent('#ss-r-atk');
     const displayedATK = parseInt(atkText.trim());
 
-    // Expected ATK with BaseLv=120, STR=130, DEX=1, LUK=1:
-    // floor(120/4) + 130 + floor(1/5) + floor(1/3) = 30 + 130 + 0 + 0 = 160
-    const expectedATK = Math.floor(120 / 4) + 130 + Math.floor(1 / 5) + Math.floor(1 / 3);
+    // Renewal: floor(120/4) + 130 + floor(130²/100) + floor(1/5) + floor(1/3)
+    //        = 30 + 130 + 169 + 0 + 0 = 329
+    const str = 130, dex = 1, luk = 1;
+    const expectedATK = Math.floor(120 / 4) + str + Math.floor(str * str / 100) + Math.floor(dex / 5) + Math.floor(luk / 3);
 
     console.log(`[Test 6] StatusATK — Expected: ${expectedATK}, Displayed: ${displayedATK}`);
 
     // The ATK should be > 0 and reflect the high stats
     expect(displayedATK).toBeGreaterThan(0);
 
-    // If stat points were sufficient, ATK should be exactly 160
+    // If stat points were sufficient, ATK should be exactly 329
     if (parseInt(strValue) === 130) {
       expect(displayedATK).toBe(expectedATK);
-      expect(displayedATK).toBe(160);
+      expect(displayedATK).toBe(329);
     } else {
       // STR was capped due to insufficient points — still verify ATK is calculated
       console.log(`[Test 6] NOTE: STR was capped to ${strValue} due to stat point budget`);
@@ -381,12 +314,14 @@ test.describe('Renewal Formula Verification', () => {
     const atkText = await page.textContent('#ss-r-atk');
     const displayedATK = parseInt(atkText.trim());
 
-    // Expected: floor(99/4) + 80 + floor(50/5) + floor(30/3) = 24 + 80 + 10 + 10 = 124
-    const expectedATK = Math.floor(99 / 4) + 80 + Math.floor(50 / 5) + Math.floor(30 / 3);
+    // Renewal: floor(99/4) + 80 + floor(80²/100) + floor(50/5) + floor(30/3)
+    //        = 24 + 80 + 64 + 10 + 10 = 188
+    const str = 80, dex = 50, luk = 30;
+    const expectedATK = Math.floor(99 / 4) + str + Math.floor(str * str / 100) + Math.floor(dex / 5) + Math.floor(luk / 3);
 
     console.log(`[Test 7] StatusATK — Expected: ${expectedATK}, Displayed: ${displayedATK}`);
     expect(displayedATK).toBe(expectedATK);
-    expect(displayedATK).toBe(124);
+    expect(displayedATK).toBe(188);
 
     // Verify MATK (mainly INT-based, with small contribution from other stats)
     const matkText = await page.textContent('#ss-r-matk');
@@ -407,53 +342,5 @@ test.describe('Renewal Formula Verification', () => {
     expect(displayedCrit).toBe(expectedCrit);
   });
 
-  // ── Test 8: Damage Calc — Formula breakdown cross-check ───────────
-  test('Test 8: Damage Calculator — manual target damage verification', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    // Click Damage tab
-    await page.click('button.tab[data-tab="damage-calc"]');
-    await expect(page.locator('#sec-damage-calc')).toBeVisible();
-
-    // Set player stats
-    await page.fill('#dcBaseLv', '99');
-    await page.locator('#dcBaseLv').dispatchEvent('input');
-    await page.fill('#dcSTR', '99');
-    await page.locator('#dcSTR').dispatchEvent('input');
-    await page.fill('#dcDEX', '1');
-    await page.locator('#dcDEX').dispatchEvent('input');
-    await page.fill('#dcLUK', '1');
-    await page.locator('#dcLUK').dispatchEvent('input');
-
-    // Set manual target DEF=0 (no reduction)
-    await page.fill('#dcManDef', '0');
-    await page.locator('#dcManDef').dispatchEvent('input');
-
-    await page.waitForTimeout(500);
-
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'test8-manual-target.png'), fullPage: false });
-
-    // Without a weapon, damage should come from StatusATK*2 only
-    // StatusATK = floor(99/4) + 99 + floor(1/5) + floor(1/3) = 123
-    // No weapon: minATK = maxATK = 123*2 + 0 + 0 = 246
-    // With DEF=0: hardDef = (4000+0)/(4000+0) = 1.0
-    // Size penalty: Dagger (default) vs Medium (default) = 75%
-    // Element: Neutral vs Neutral = 100%
-    // Damage = 246 * 1.0 * 0.75 * 1.0 = 184.5 -> floor = 184
-    const minDmgText = await page.textContent('#dcMinDmg');
-    const maxDmgText = await page.textContent('#dcMaxDmg');
-    const minDmg = parseInt(minDmgText.replace(/,/g, ''));
-    const maxDmg = parseInt(maxDmgText.replace(/,/g, ''));
-
-    console.log(`[Test 8] No-weapon damage — Min: ${minDmg}, Max: ${maxDmg}`);
-    console.log(`[Test 8] StatusATK*2 = ${123 * 2} = 246`);
-
-    // Without weapon: size penalty depends on default weapon type
-    // The damage should be positive (StatusATK contribution)
-    expect(minDmg).toBeGreaterThan(0);
-    expect(maxDmg).toBeGreaterThan(0);
-    expect(minDmg).toBe(maxDmg); // No variance without weapon
-  });
 
 });

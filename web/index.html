@@ -645,7 +645,6 @@ td.cat-col { }
     <span class="tab-group-label">Sim</span>
     <button class="tab" data-tab="stat-sim">Status</button>
     <button class="tab" data-tab="build-sim">Build</button>
-    <button class="tab" data-tab="damage-calc">Damage</button>
   </div>
   <div class="tab-group">
     <span class="tab-group-label">Tools</span>
@@ -816,9 +815,6 @@ td.cat-col { }
   <!-- STATUS SIMULATOR -->
   <div class="section" id="sec-stat-sim"></div>
 
-  <!-- DAMAGE CALC -->
-  <div class="section" id="sec-damage-calc"></div>
-
   <!-- ZENY CALCULATOR -->
   <div class="section" id="sec-zeny-calc"></div>
 
@@ -853,7 +849,6 @@ td.cat-col { }
 <script src="tools/build_state.js"></script>
 <script src="tools/skill_data.js"></script>
 <script src="tools/stat_simulator.js"></script>
-<script src="tools/damage_calc.js"></script>
 <script src="tools/zeny_calc.js"></script>
 <script src="tools/level_guide.js"></script>
 <script src="tools/mvp_timer.js"></script>
@@ -952,9 +947,6 @@ function init() {
 
   // Status Simulator
   if (typeof initStatSimulator === 'function') initStatSimulator();
-
-  // Damage Calculator
-  if (typeof initDamageCalc === 'function') initDamageCalc();
 
   // Zeny Calculator
   if (typeof initZenyCalc === 'function') initZenyCalc();

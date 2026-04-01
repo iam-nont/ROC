@@ -728,14 +728,22 @@
     return results;
   }
 
+  /** Walk time between mobs based on map spawn density */
+  function getWalkTime(mapTotalCount) {
+    // More spawns = mobs closer together = less walk time
+    // Reference: 50 mobs → 3s walk, scale inversely
+    var t = 3.0 * (50 / Math.max(mapTotalCount, 1));
+    return Math.max(0.5, Math.min(t, 15));
+  }
+
   /** Estimate kills/hr for a specific monster using Build Simulator DPS */
-  function getBuildKillsPerHour(monster) {
+  function getBuildKillsPerHour(monster, mapTotalCount) {
     if (!window.ROC_BUILD || !ROC_BUILD.calcDamageVsMonster) return killsPerHour;
     var monHP = monster.hp || 1;
     var dps = ROC_BUILD.calcDamageVsMonster(monster);
     if (dps <= 0) return 0;
     var timeToKill = monHP / dps;
-    var walkTime = 1.5; // avg seconds between spawns
+    var walkTime = getWalkTime(mapTotalCount || 50);
     return Math.max(1, Math.floor(3600 / (timeToKill + walkTime)));
   }
 
@@ -747,7 +755,7 @@
         var totalZenyHr = 0, totalBaseHr = 0, totalJobHr = 0;
         md.monsters.forEach(mob => {
           var fullMon = mob.fullMonster || monsterById[mob.id];
-          var kph = fullMon ? getBuildKillsPerHour(fullMon) : killsPerHour;
+          var kph = fullMon ? getBuildKillsPerHour(fullMon, md.totalCount) : killsPerHour;
           mob._autoKillsHr = kph;
           totalZenyHr += mob.zenyPerKill * kph;
           totalBaseHr += mob.baseExp * kph;
@@ -832,10 +840,11 @@
     // Summary
     const totalMaps = filteredData.length;
     const topMap = filteredData.length > 0 ? filteredData[0] : null;
+    const killsLabel = useBuildKills ? '<span style="color:var(--accent)">Build DPS (per mob)</span>' : `<span>${killsPerHour}</span>`;
     summary.innerHTML = `
       Maps: <span>${totalMaps}</span>
       ${topMap ? `&nbsp;|&nbsp; Best (${escHtml(sortKeyLabel())}): <span style="color:var(--gold)">${escHtml(topMap.displayName)}</span>` : ''}
-      &nbsp;|&nbsp; Kills/hr: <span>${killsPerHour}</span>
+      &nbsp;|&nbsp; Kills/hr: ${killsLabel}
       &nbsp;|&nbsp; Drop Rate: <span>${dropRateMult}x</span>
     `;
 

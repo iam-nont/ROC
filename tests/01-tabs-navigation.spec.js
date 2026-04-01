@@ -13,7 +13,6 @@ test.describe('Tab Navigation', () => {
     { tab: 'stat-sim', section: 'sec-stat-sim' },
     { tab: 'build-sim', section: 'sec-build-sim' },
     { tab: 'zeny-calc', section: 'sec-zeny-calc' },
-    { tab: 'damage-calc', section: 'sec-damage-calc' },
   ];
 
   for (const { tab, section } of tabs) {
