@@ -561,6 +561,128 @@ def main():
 
         merged.append(entry)
 
+    # ─── Supplement: add spawn-referenced monsters not in ROC official ──
+    merged_ids = set(m['id'] for m in merged)
+
+    # Load spawn data to find referenced monster IDs
+    spawn_file = os.path.join(BASE_DIR, 'web', 'spawn_data.js')
+    spawn_monster_refs = {}  # id -> {name, lv, hp, race, element}
+    if os.path.exists(spawn_file):
+        with open(spawn_file, 'r', encoding='utf-8') as f:
+            spawn_content = f.read()
+        spawn_match = re.search(r'const MAP_SPAWNS\s*=\s*(\{.*?\});', spawn_content, re.DOTALL)
+        if spawn_match:
+            try:
+                spawn_data = json.loads(spawn_match.group(1))
+                for map_name, spawns in spawn_data.items():
+                    for sp in spawns:
+                        sid = sp.get('id')
+                        if sid and sid not in merged_ids and sid not in spawn_monster_refs:
+                            spawn_monster_refs[sid] = {
+                                'name': sp.get('n', 'Unknown'),
+                                'lv': sp.get('lv', 1),
+                                'hp': sp.get('hp', 1),
+                                'race': sp.get('race', ''),
+                                'element': sp.get('el', ''),
+                            }
+            except json.JSONDecodeError:
+                pass
+
+    supplemented_ra = 0
+    supplemented_spawn = 0
+    for sid, sp_info in spawn_monster_refs.items():
+        if sid in merged_ids:
+            continue
+        # Try rAthena data first (has full stats + drops)
+        ra = ra_by_id.get(sid)
+        if ra:
+            hp = ra.get('hp', sp_info['hp'])
+            mon_class = 'Boss' if ra.get('class') == 'Boss' or hp >= 100000 else 'Normal'
+            # Build drops from rAthena
+            drops = []
+            for d in ra.get('drops', []):
+                item_id = d.get('itemId', 0)
+                item_name = d.get('itemName', '')
+                rate = d.get('rate', 0)
+                if item_id and rate > 0:
+                    drops.append({
+                        'itemId': item_id,
+                        'itemName': item_name,
+                        'rate': rate,
+                        'stealProtected': False,
+                    })
+            entry = {
+                'id': sid,
+                'aegisName': ra.get('aegisName', ''),
+                'name': ra.get('name', sp_info['name']),
+                'level': ra.get('level', sp_info['lv']),
+                'hp': hp,
+                'sp': ra.get('sp', 0),
+                'baseExp': ra.get('baseExp', 0),
+                'jobExp': ra.get('jobExp', 0),
+                'mvpExp': ra.get('mvpExp', 0),
+                'atk': ra.get('atk', [0, 0]),
+                'def': ra.get('def', 0),
+                'mdef': ra.get('mdef', 0),
+                # flee/hit not in rAthena — estimate from stats
+                'flee': ra.get('level', 1) + ra.get('agi', 1),
+                'hit': ra.get('level', 1) + ra.get('dex', 1),
+                'str': ra.get('str', 0),
+                'agi': ra.get('agi', 0),
+                'vit': ra.get('vit', 0),
+                'int': ra.get('int', 0),
+                'dex': ra.get('dex', 0),
+                'luk': ra.get('luk', 0),
+                'attackRange': ra.get('attackRange', 0),
+                'skillRange': ra.get('skillRange', 0),
+                'chaseRange': ra.get('chaseRange', 0),
+                'size': ra.get('size', sp_info.get('size', '')),
+                'race': ra.get('race', sp_info['race']),
+                'element': ra.get('element', sp_info['element']),
+                'walkSpeed': ra.get('walkSpeed', 0),
+                'attackDelay': ra.get('attackDelay', 0),
+                'attackMotion': ra.get('attackMotion', 0),
+                'damageMotion': ra.get('damageMotion', 0),
+                'ai': ra.get('ai', ''),
+                'class': mon_class,
+                'drops': drops,
+            }
+            if ra.get('mvpDrops'):
+                entry['mvpDrops'] = ra['mvpDrops']
+            supplemented_ra += 1
+        else:
+            # No rAthena data — use spawn info only (minimal entry)
+            hp = sp_info['hp'] or 1
+            entry = {
+                'id': sid,
+                'aegisName': '',
+                'name': sp_info['name'],
+                'level': sp_info['lv'] or 1,
+                'hp': hp,
+                'sp': 0,
+                'baseExp': 0,
+                'jobExp': 0,
+                'mvpExp': 0,
+                'atk': [0, 0],
+                'def': 0,
+                'mdef': 0,
+                'flee': 0,
+                'hit': 0,
+                'str': 0, 'agi': 0, 'vit': 0, 'int': 0, 'dex': 0, 'luk': 0,
+                'attackRange': 0, 'skillRange': 0, 'chaseRange': 0,
+                'size': '',
+                'race': sp_info['race'],
+                'element': sp_info['element'],
+                'walkSpeed': 0, 'attackDelay': 0, 'attackMotion': 0, 'damageMotion': 0,
+                'ai': '',
+                'class': 'Boss' if hp >= 100000 else 'Normal',
+                'drops': [],
+            }
+            supplemented_spawn += 1
+
+        merged.append(entry)
+        merged_ids.add(sid)
+
     # Sort by ID
     merged.sort(key=lambda x: x['id'])
 
@@ -573,6 +695,11 @@ def main():
     print(f"  Manual mapping:     {stats['mapped']}")
     print(f"  Div ID disambig:    {stats['div_id']}")
     print(f"  No rAthena match:   {stats['no_match']}")
+    print(f"")
+    print(f"Supplemented from spawn_data.js:")
+    print(f"  From rAthena:       {supplemented_ra}")
+    print(f"  From spawn only:    {supplemented_spawn}")
+    print(f"  Total added:        {supplemented_ra + supplemented_spawn}")
     print(f"")
     print(f"Drop items: {total_drops} total")
     print(f"  Matched to item ID: {matched_items}")
@@ -596,8 +723,8 @@ def main():
     # ─── Write output ────────────────────────────────────────────────────
     out_path = os.path.join(BASE_DIR, 'web', 'monster_data.js')
     with open(out_path, 'w', encoding='utf-8') as f:
-        f.write('// Auto-generated: ROC Classic TH official + rAthena supplementary\n')
-        f.write(f'// ROC monsters: {len(merged)} | Generated by build_monster_data.py\n')
+        f.write('// Auto-generated: ROC Classic TH official + rAthena + spawn supplementary\n')
+        f.write(f'// Monsters: {len(merged)} (ROC:{len(roc_monsters)} + rAthena:{supplemented_ra} + spawn:{supplemented_spawn}) | Generated by build_monster_data.py\n')
         f.write('const MONSTERS = ')
         f.write(json.dumps(merged, separators=(',', ':'), ensure_ascii=False))
         f.write(';\n\n')
